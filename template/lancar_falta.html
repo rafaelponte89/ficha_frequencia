@@ -1,13 +1,40 @@
-
 {% extends 'template/menu.html'%}
 {% load crispy_forms_tags %}
 {% block content %}
-    <label>{{ nome }}</label>
-    <form method="POST">
-        {% csrf_token %}
-        {{ form|crispy }}
-        <div clas="form-group">
-            <button class="btn btn-outline-dark">Gravar</button>
-        </div>
-    </form>
+<label>{{ nome }}</label>
+<form method="POST">
+    {% csrf_token %}
+    {{ form|crispy }}
+    <div clas="form-group">
+        <button class="btn btn-outline-dark">Gravar</button>
+    </div>
+</form>
+
+<script>
+    let falta = document.getElementById("id_falta");
+    let texto = "";
+    falta.addEventListener("change", function () {
+        texto = falta.options[falta.selectedIndex].text;
+        if (texto === "LN"){
+            document.getElementById("id_qtd_dias").value = 8;
+            // document.getElementById("id_qtd_dias").disabled=true;
+        }
+        else if (texto === "P") {
+            document.getElementById("id_qtd_dias").value = 5;
+            // document.getElementById("id_qtd_dias").disabled=true;
+        }
+        else if (texto === "LP") {
+            document.getElementById("id_qtd_dias").value = 90;
+            // document.getElementById("id_qtd_dias").disabled=true;
+        }
+        else {
+            document.getElementById("id_qtd_dias").value = 1;
+            // document.getElementById("id_qtd_dias").disabled=false;
+
+        }
+    });
+
+  
+
+</script>
 {% endblock content %}

@@ -8,7 +8,7 @@ from django.views import View
 from io import BytesIO
 from xhtml2pdf import pisa
 from django.template.loader import get_template
-
+from datetime import datetime, timedelta
 from django.http import HttpResponse
 
 def bissexto(ano):
@@ -28,7 +28,7 @@ def faltas(request):
         form = formularioTF(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('cadastrartf')
+            return redirect('listarfaltas')
     else:
         form = formularioTF()
     return render(request,'template/cadastrar_tipo_falta.html',{'form':form, 'faltas':faltas})
@@ -38,8 +38,6 @@ def pessoas_faltas(request, pessoa_id):
     pessoa = Pessoas.objects.get(pk=pessoa_id)
     pessoa_faltas = Faltas_Pessoas.objects.all()
 
-    for pf in pessoa_faltas:
-        print(pf.data)
 
     if request.method == 'POST':
         form = formularioLF(request.POST)
@@ -170,53 +168,64 @@ def gerar_ficha(request, pessoa_id, ano, pdf=None):
     tipo_faltas = {}
     faltas = Faltas_Pessoas.objects.all().order_by('data').filter(data__year=ano).filter(pessoa=pessoa_id)
     
-    print(faltas_a_descontar(ano,pessoa))
+    # for d in faltas:
+    #     print(d.falta.tipo, d.qtd_dias, d.data)
 
+
+    # insere no dicionario nova falta e atualiza quantidade da falta
     qtd = 0
     for f in faltas:
         sigla = f.falta.tipo
         descricao = f.falta.descricao
-        
-        
+      
         if sigla not in tipo_faltas.keys():
-           qtd = 1
+           qtd = f.qtd_dias
            tipo_faltas[sigla] = [descricao, qtd]
         else:
             qtd = tipo_faltas[sigla][1]
-            qtd += 1
+            qtd += f.qtd_dias
             tipo_faltas[sigla][1] = qtd
 
-   
+    data = ''
     for falta in faltas:
-        mes = falta.data.month
-        dia = falta.data.day - 1
        
-        if mes == 1:
-            meses['janeiro'][dia] = falta.falta.tipo
-        elif mes == 2:
-            meses['fevereiro'][dia] = falta.falta.tipo
-        elif mes == 3:
-            meses['marco'][dia] = falta.falta.tipo
-        elif mes == 4:
-            meses['abril'][dia] = falta.falta.tipo
-        elif mes == 5:
-            meses['maio'][dia] = falta.falta.tipo
-        elif mes == 6:
-            meses['junho'][dia] = falta.falta.tipo
-        elif mes == 7:
-            meses['julho'][dia] = falta.falta.tipo
-        elif mes == 8:
-            meses['agosto'][dia] = falta.falta.tipo
-        elif mes == 9:
-            meses['setembro'][dia] = falta.falta.tipo
-        elif mes == 10:
-            meses['outubro'][dia] = falta.falta.tipo
-        elif mes == 11:
-            meses['novembro'][dia] = falta.falta.tipo
-        elif mes == 12:
-            meses['dezembro'][dia] = falta.falta.tipo
-    
-   
+        data = falta.data
+        
+        for d in range(falta.qtd_dias):
+              
+            if d > 0:
+                data = data + timedelta(days=1)
+            
+            # retorna as data úteis se tipo da falta for P, caso contrário retorna a própria data
+            data = data_util(data, falta.falta.tipo)
+
+            mes = data.month
+            dia = data.day - 1
+            
+            if mes == 1:
+                meses['janeiro'][dia] = falta.falta.tipo
+            elif mes == 2:
+                meses['fevereiro'][dia] = falta.falta.tipo
+            elif mes == 3:
+                meses['marco'][dia] = falta.falta.tipo
+            elif mes == 4:
+                meses['abril'][dia] = falta.falta.tipo
+            elif mes == 5:
+                meses['maio'][dia] = falta.falta.tipo
+            elif mes == 6:
+                meses['junho'][dia] = falta.falta.tipo
+            elif mes == 7:
+                meses['julho'][dia] = falta.falta.tipo
+            elif mes == 8:
+                meses['agosto'][dia] = falta.falta.tipo
+            elif mes == 9:
+                meses['setembro'][dia] = falta.falta.tipo
+            elif mes == 10:
+                meses['outubro'][dia] = falta.falta.tipo
+            elif mes == 11:
+                meses['novembro'][dia] = falta.falta.tipo
+            elif mes == 12:
+                meses['dezembro'][dia] = falta.falta.tipo
     
     
     contexto = {
@@ -242,8 +251,17 @@ def gerar_ficha(request, pessoa_id, ano, pdf=None):
         return HttpResponse(pdf, content_type='application/pdf')
         
     return render(request,'template/ficha_cem.html', {'contexto':contexto})
+
+# função recursiva que determina se a data é útil para o tipo P, senão retorna própria data
+def data_util(data, tp='P'):
     
-    
+    if tp == 'P':
+        if (data.weekday() != 6 and data.weekday() != 5):
+            return data
+        data = data + timedelta(days=1)
+        return data_util(data)
+    return data
+   
    
    
 def index(request):

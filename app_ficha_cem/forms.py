@@ -9,6 +9,7 @@ class formularioPessoa(forms.ModelForm):
         model = Pessoas
         fields = ['nome']
 
+# formulário tipo de faltas
 class formularioTF(forms.ModelForm):
 
     tipo = forms.CharField(max_length=3, required=True)
@@ -18,6 +19,7 @@ class formularioTF(forms.ModelForm):
         model = Faltas
         fields = ['tipo','descricao']
 
+# formulário lançamento de faltas
 class formularioLF(forms.ModelForm):
 
     pessoa = forms.ModelChoiceField(queryset=Pessoas.objects.all(),
@@ -25,11 +27,10 @@ class formularioLF(forms.ModelForm):
     data =  forms.DateField(
     widget=SelectDateWidget(
         
-    ),
-)
-    # falta = forms.ModelChoiceField(queryset=Faltas.objects.all(),
-    #                                   widget=forms.HiddenInput())
+    ),)
+   
+    qtd_dias = forms.IntegerField()
 
     class Meta:
         model = Faltas_Pessoas
-        fields = ['data','falta','pessoa']
+        fields = ['data','falta','pessoa','qtd_dias']
