@@ -1,0 +1,28 @@
+{% extends 'template/menu.html' %}
+
+{% block content %}
+<table class="table table-hover">
+    <thead>
+        <tr>
+
+            <th scope="col">Anos</th>
+            <th scope="col">Imprimir</th>
+        </tr>
+    </thead>
+    <tbody>
+        {%for ano in anos %}
+        <tr>
+            <td>
+                <a href="{% url 'ficha' pessoa.id ano %}">{{ano}}</a>
+            </td>
+            <td>
+                <a href="{% url 'ficha' pessoa.id ano %}">{{pessoa.nome}}_{{ano}}.pdf</a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tr>
+    </tbody>
+</table>
+
+{% endblock content %}
+

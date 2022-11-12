@@ -1,0 +1,38 @@
+{% extends 'template/menu.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<form method="POST">
+    {% csrf_token %}
+    {{ form|crispy }}
+    <div clas="form-group">
+        <button class="btn btn-outline-dark">Gravar</button>
+    </div>
+</form>
+        {% if pessoas %}
+<table class="table table-hover">
+    <thead>
+        <tr>
+
+            <th scope="col">Nome</th>
+       
+            <th scope="col">Operação</th>
+            <th scope="col">Ficha Cem </th>
+        </tr>
+    </thead>
+    <tbody>
+        
+        {% for pessoa in pessoas %}
+        <tr>
+            <td><a href="{% url 'atualizarpessoa' pessoa.id %}">{{pessoa.nome}}</a></td>
+            <td><a href="{% url 'lancarfalta' pessoa.id %}">Lançar Falta</a></td>
+            <td><a href="{% url 'ficha' pessoa.id %}">Ficha Cem</a></td>
+        </tr>
+        {% endfor %}
+        {% else %}
+
+        {% endif %}
+        </tr>
+    </tbody>
+</table>
+{% endblock content %}
