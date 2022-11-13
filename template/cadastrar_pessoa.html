@@ -26,7 +26,7 @@
         <tr>
             <td><a href="{% url 'atualizarpessoa' pessoa.id %}">{{pessoa.nome}}</a></td>
             <td><a href="{% url 'lancarfalta' pessoa.id %}">Lançar Falta</a></td>
-            <td><a href="{% url 'ficha' pessoa.id %}">Ficha Cem</a></td>
+            <td><a href="{% url 'listarficha' pessoa.id %}">Visualizar</a></td>
         </tr>
         {% endfor %}
         {% else %}

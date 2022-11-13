@@ -6,14 +6,21 @@
         <tr>
 
             <th scope="col">Anos</th>
+            <th scope="col">Situação</th>
             <th scope="col">Imprimir</th>
         </tr>
     </thead>
     <tbody>
-        {%for ano in anos %}
+        {%for ano,status in anos.items %}
         <tr>
             <td>
                 <a href="{% url 'ficha' pessoa.id ano %}">{{ano}}</a>
+            </td>
+            <td>
+                
+                <a href="{% url 'encerrarano' pessoa.id ano %}">{{status}}</a>
+
+
             </td>
             <td>
                 <a href="{% url 'ficha' pessoa.id ano %}">{{pessoa.nome}}_{{ano}}.pdf</a>
@@ -25,4 +32,3 @@
 </table>
 
 {% endblock content %}
-

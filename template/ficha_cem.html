@@ -146,7 +146,7 @@
             </table>
 
             {% if contexto.pontuacao %}
-            <a href="{% url 'encerrarano' contexto.pessoa.id contexto.ano  %}">Encerrar Ano</a>
+            <a href="{% url 'encerrarano' contexto.pessoa.id contexto.ano contexto.status  %}">Encerrar Ano</a>
             {% endif %}
 
         </div>
