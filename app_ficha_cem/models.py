@@ -18,7 +18,7 @@ class Faltas(models.Model):
 class Pessoas(models.Model):
     # id = models.CharField(max_length=6, primary_key=True)
     nome = models.CharField(max_length=150)
-    # admissao = models.DateField()
+    admissao = models.DateField(default='1991-01-01')
 
 class Faltas_Pessoas(models.Model):
     

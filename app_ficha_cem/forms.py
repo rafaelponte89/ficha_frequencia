@@ -4,10 +4,13 @@ from django.forms.widgets import SelectDateWidget
 
 class formularioPessoa(forms.ModelForm):
     nome = forms.CharField(max_length=150, required=True)
-
+    admissao =  forms.DateField(
+    widget=SelectDateWidget(
+        
+    ),)
     class Meta:
         model = Pessoas
-        fields = ['nome']
+        fields = ['nome','admissao']
 
 # formulário tipo de faltas
 class formularioTF(forms.ModelForm):

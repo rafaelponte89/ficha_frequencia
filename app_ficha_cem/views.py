@@ -34,6 +34,10 @@ def retornar_dias(ano):
 # configurar meses
 def configurar_meses(ano):
     
+    # meses_31 = ['C','C','C','C','C','C','C','C','C','C','C','C','C','C','C', 'C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C']
+    # meses_30 = ['C','C','C','C','C','C','C','C','C','C','C','C','C','C','C', 'C','C','C','C','C','C','C','C','C','C','C','C','C','C','C',' ']
+    # fevereiro = ['C','C','C','C','C','C','C','C','C','C','C','C','C','C','C', 'C','C','C','C','C','C','C','C','C','C','C','C','C']
+    
     meses_31 = ['C','C','C','C','C','C','C','C','C','C','C','C','C','C','C', 'C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C']
     meses_30 = ['C','C','C','C','C','C','C','C','C','C','C','C','C','C','C', 'C','C','C','C','C','C','C','C','C','C','C','C','C','C','C',' ']
     fevereiro = ['C','C','C','C','C','C','C','C','C','C','C','C','C','C','C', 'C','C','C','C','C','C','C','C','C','C','C','C','C']
@@ -55,9 +59,86 @@ def configurar_meses(ano):
         'novembro': meses_30.copy(),
         'dezembro': meses_31.copy()
     }
-
+    
     return meses
 
+def retornar_mes_num(mes_nome):
+    meses = {
+        'janeiro':[1,31],
+        'fevereiro':[2,28],
+        'marco':[3,31],
+        'abril':[4,30],
+        'maio':[5,31],
+        'junho':[6,30],
+        'julho':[7,31],
+        'agosto':[8,31],
+        'setembro':[9,30],
+        'outubro':[10,31],
+        'novembro':[11,30],
+        'dezembro':[12,31]
+    }
+    num_mes = meses[mes_nome]
+
+    return num_mes
+
+def retornar_mes_nome(mes_num):
+    meses = {
+        1:['janeiro',31],
+        2:['fevereiro',28],
+        3:['marco',31],
+        4:['abril',30],
+        5:['maio',31],
+        6:['junho',30],
+        7:['julho',31],
+        8:['agosto',31],
+        9:['setembro',30],
+        10:['outubro',31],
+        11:['novembro',30],
+        12:['dezembro',31]
+    }
+    nome_mes = meses[mes_num]
+    return nome_mes
+
+def configurar_meses_v2(ano, pessoa_id):
+    pessoa = Pessoas.objects.get(pk=pessoa_id)
+    mes_adm_n = pessoa.admissao.month
+    dia_adm = pessoa.admissao.day - 1
+    ano_adm = pessoa.admissao.year
+    meses = {}
+    dias = []
+
+    # construção dos meses
+    for i in range(1,13):
+        mes = retornar_mes_nome(i)[0]
+        qtd_dias = retornar_mes_nome(i)[1]
+
+        if mes == 'fevereiro' and bissexto(ano):
+            qtd_dias = 28
+        else:
+            for i in range(qtd_dias):
+                dias.append(' ')
+    
+        meses[mes] = dias
+        dias = []
+    
+    # dicionario de meses conforme data de admissao
+    if ano == ano_adm:
+        for m, dias in meses.items():
+            for dia in range(len(dias)):
+                if mes_adm_n == retornar_mes_num(m)[0]:
+                    if dia_adm <= dia:
+                        meses[m][dia] = 'C'
+                elif mes_adm_n <= retornar_mes_num(m)[0]:
+                    meses[m][dia] = 'C'
+                else:
+                    meses[m][dia] = ' '
+    else:
+        if ano >= ano_adm:
+            for m, dias in meses.items():
+                for dia in range(len(dias)):
+                    meses[m][dia] = 'C'
+    
+    return meses
 # função recursiva que determina se a data é útil para o tipo P, senão retorna própria data
 def data_util(data, tp='P'):
     
@@ -75,7 +156,6 @@ def pessoas_faltas(request, pessoa_id):
 
     if request.method == 'POST':
         form = formularioLF(request.POST)
-    
         if form.is_valid():
             form.save()
             return redirect('lancarfalta',pessoa_id)
@@ -200,14 +280,18 @@ def faltas(request):
 def gerar_ficha(request, pessoa_id, ano, pdf=None):
     
     pessoa = Pessoas.objects.get(pk=pessoa_id)
-    meses = configurar_meses(ano)
-    
+    # meses = configurar_meses(ano)
+    meses = configurar_meses_v2(ano,pessoa_id)
     cargo, funcao, ue  = gerar_pontuacao_anual(ano,pessoa)
     cargo_a, funcao_a, ue_a  = gerar_pontuacao_anual(ano,pessoa,'a')
     dias = range(1,32)
     faltas = Faltas_Pessoas.objects.all().order_by('data').filter(data__year=ano).filter(pessoa=pessoa_id)
-
-
+    admissao = pessoa.admissao
+    dia_adm= pessoa.admissao.day
+    mes_adm = pessoa.admissao.month
+    ano_adm = pessoa.admissao.year
+    admissao = f'{dia_adm}/{mes_adm}/{ano_adm}'
+    
     tipo_faltas=contar_tipos_faltas(faltas)
 
     data = ''
@@ -250,7 +334,8 @@ def gerar_ficha(request, pessoa_id, ano, pdf=None):
                 meses['novembro'][dia] = falta.falta.tipo
             elif mes == 12:
                 meses['dezembro'][dia] = falta.falta.tipo
-    
+
+
     contexto = {
         'meses': meses,
         'ano': ano,
@@ -265,7 +350,8 @@ def gerar_ficha(request, pessoa_id, ano, pdf=None):
     
         'dias': dias,
         'tp_faltas': tipo_faltas,
-        'status': 'aberto'
+        # 'status': 'aberto',
+        'admissao':admissao
         # 'pagesize':'A4'
 
     }
