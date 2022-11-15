@@ -13,20 +13,22 @@
 <table class="table table-hover">
     <thead>
         <tr>
-
+            <th scope="col">Ficha Cem </th>
+            <th scope="col">Operação</th>
             <th scope="col">Nome</th>
        
-            <th scope="col">Operação</th>
-            <th scope="col">Ficha Cem </th>
+            
+          
         </tr>
     </thead>
     <tbody>
         
         {% for pessoa in pessoas %}
         <tr>
-            <td><a href="{% url 'atualizarpessoa' pessoa.id %}">{{pessoa.nome}}</a></td>
-            <td><a href="{% url 'lancarfalta' pessoa.id %}">Lançar Falta</a></td>
             <td><a href="{% url 'listarficha' pessoa.id %}">Visualizar</a></td>
+            <td><a href="{% url 'lancarfalta' pessoa.id %}">Lançar Falta</a></td>
+            
+            <td><a href="{% url 'atualizarpessoa' pessoa.id %}">{{pessoa.nome}}</a></td>
         </tr>
         {% endfor %}
         {% else %}

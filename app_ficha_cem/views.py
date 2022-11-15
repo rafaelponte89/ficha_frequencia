@@ -31,37 +31,6 @@ def retornar_dias(ano):
     
     return dias
 
-# configurar meses
-def configurar_meses(ano):
-    
-    # meses_31 = ['C','C','C','C','C','C','C','C','C','C','C','C','C','C','C', 'C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C']
-    # meses_30 = ['C','C','C','C','C','C','C','C','C','C','C','C','C','C','C', 'C','C','C','C','C','C','C','C','C','C','C','C','C','C','C',' ']
-    # fevereiro = ['C','C','C','C','C','C','C','C','C','C','C','C','C','C','C', 'C','C','C','C','C','C','C','C','C','C','C','C','C']
-    
-    meses_31 = ['C','C','C','C','C','C','C','C','C','C','C','C','C','C','C', 'C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C']
-    meses_30 = ['C','C','C','C','C','C','C','C','C','C','C','C','C','C','C', 'C','C','C','C','C','C','C','C','C','C','C','C','C','C','C',' ']
-    fevereiro = ['C','C','C','C','C','C','C','C','C','C','C','C','C','C','C', 'C','C','C','C','C','C','C','C','C','C','C','C','C']
-    
-    if bissexto(ano):
-        fevereiro.append('C')
-       
-    meses = {
-        'janeiro': meses_31.copy(),
-        'fevereiro': fevereiro,
-        'marco': meses_31.copy(),
-        'abril': meses_30.copy(),
-        'maio': meses_31.copy(),
-        'junho': meses_30.copy(),
-        'julho' : meses_31.copy(),
-        'agosto': meses_31.copy(),
-        'setembro': meses_30.copy(),
-        'outubro': meses_31.copy(),
-        'novembro': meses_30.copy(),
-        'dezembro': meses_31.copy()
-    }
-    
-    return meses
-
 def retornar_mes_num(mes_nome):
     meses = {
         'janeiro':[1,31],
@@ -99,6 +68,44 @@ def retornar_mes_nome(mes_num):
     nome_mes = meses[mes_num]
     return nome_mes
 
+# função recursiva que determina se a data é útil (excluindo sábado e domingo) para o tipo P, senão retorna própria data
+def data_util(data, tp='P'):
+    
+    if tp == 'P':
+        if (data.weekday() != 6 and data.weekday() != 5):
+            return data
+        data = data + timedelta(days=1)
+        return data_util(data)
+    return data
+
+# configurar meses
+def configurar_meses(ano):
+   
+    meses_31 = ['C','C','C','C','C','C','C','C','C','C','C','C','C','C','C', 'C','C','C','C','C','C','C','C','C','C','C','C','C','C','C','C']
+    meses_30 = ['C','C','C','C','C','C','C','C','C','C','C','C','C','C','C', 'C','C','C','C','C','C','C','C','C','C','C','C','C','C','C',' ']
+    fevereiro = ['C','C','C','C','C','C','C','C','C','C','C','C','C','C','C', 'C','C','C','C','C','C','C','C','C','C','C','C','C']
+    
+    if bissexto(ano):
+        fevereiro.append('C')
+       
+    meses = {
+        'janeiro': meses_31.copy(),
+        'fevereiro': fevereiro,
+        'marco': meses_31.copy(),
+        'abril': meses_30.copy(),
+        'maio': meses_31.copy(),
+        'junho': meses_30.copy(),
+        'julho' : meses_31.copy(),
+        'agosto': meses_31.copy(),
+        'setembro': meses_30.copy(),
+        'outubro': meses_31.copy(),
+        'novembro': meses_30.copy(),
+        'dezembro': meses_31.copy()
+    }
+    
+    return meses
+
+# configurar meses de acordo com a data de admissao de uma pessoa
 def configurar_meses_v2(ano, pessoa_id):
     pessoa = Pessoas.objects.get(pk=pessoa_id)
     mes_adm_n = pessoa.admissao.month
@@ -113,10 +120,10 @@ def configurar_meses_v2(ano, pessoa_id):
         qtd_dias = retornar_mes_nome(i)[1]
 
         if mes == 'fevereiro' and bissexto(ano):
-            qtd_dias = 28
-        else:
-            for i in range(qtd_dias):
-                dias.append(' ')
+            qtd_dias = 29
+        
+        for i in range(qtd_dias):
+            dias.append(' ')
     
         meses[mes] = dias
         dias = []
@@ -139,26 +146,49 @@ def configurar_meses_v2(ano, pessoa_id):
                     meses[m][dia] = 'C'
     
     return meses
-# função recursiva que determina se a data é útil para o tipo P, senão retorna própria data
-def data_util(data, tp='P'):
+
+# faz a pesquisa e incremento para verificar se existe alta lançada naquela data, impedindo lançamento em data
+# que já exista falta computada
+def lancar_falta(data_lanc, pessoa_id):
+    q1 = Faltas_Pessoas.objects.filter(data__year=data_lanc.year)
+    q2 = Faltas_Pessoas.objects.filter(pessoa_id=pessoa_id)
+    faltas_pessoa = q1.intersection(q2)
+    datas = []
+    for fp in faltas_pessoa:
+        data = fp.data
+        for dias in range(1,fp.qtd_dias):
+            data += timedelta(days=1)
+            data = datetime(data.year, data.month, data.day)
+            datas.append(data)
     
-    if tp == 'P':
-        if (data.weekday() != 6 and data.weekday() != 5):
-            return data
-        data = data + timedelta(days=1)
-        return data_util(data)
-    return data
+   
+    data_lanc = datetime(data_lanc.year, data_lanc.month, data_lanc.day)
+
+    # se a data de lancamento já existe, falso para lançamento
+    if data_lanc in datas:
+        return False
+    # se a data de lancamento não existe liberado
+    else:
+        return True
 
 # fazer o lançamento de faltas para determinada pessoa
 def pessoas_faltas(request, pessoa_id):
 
     pessoa = Pessoas.objects.get(pk=pessoa_id)
+    admissao = pessoa.admissao
+    data_lancamento = 0
 
     if request.method == 'POST':
         form = formularioLF(request.POST)
-        if form.is_valid():
+        data_lancamento = form['data'].value()
+        data_lancamento = datetime.strptime(data_lancamento, '%Y-%m-%d').date()
+      
+        if form.is_valid() and data_lancamento > admissao and lancar_falta(data_lancamento, pessoa_id):
+        
             form.save()
             return redirect('lancarfalta',pessoa_id)
+        else:
+            print(f'Não salvo: Data de Admissão da Pessoa: {admissao}')
     else:
         form = formularioLF(initial={'pessoa':pessoa})
     return render(request,'template/lancar_falta.html', {'form':form, 'pessoa':pessoa})
@@ -276,11 +306,10 @@ def faltas(request):
         form = formularioTF()
     return render(request,'template/cadastrar_tipo_falta.html',{'form':form, 'faltas':faltas})
 
-
 def gerar_ficha(request, pessoa_id, ano, pdf=None):
     
     pessoa = Pessoas.objects.get(pk=pessoa_id)
-    # meses = configurar_meses(ano)
+    meses = configurar_meses(ano)
     meses = configurar_meses_v2(ano,pessoa_id)
     cargo, funcao, ue  = gerar_pontuacao_anual(ano,pessoa)
     cargo_a, funcao_a, ue_a  = gerar_pontuacao_anual(ano,pessoa,'a')
@@ -347,7 +376,6 @@ def gerar_ficha(request, pessoa_id, ano, pdf=None):
         'ue_a': ue_a,
         'nome': pessoa.nome,
         'pessoa': pessoa,
-    
         'dias': dias,
         'tp_faltas': tipo_faltas,
         # 'status': 'aberto',

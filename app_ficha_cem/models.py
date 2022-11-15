@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.utils.timezone import now
 # Create your models here.
 
 # licença nojo 8 dias corridos
@@ -10,7 +10,6 @@ class Faltas(models.Model):
     tipo = models.CharField(max_length=3)
     descricao =  models.CharField(max_length=30)
     
-
     def __str__(self):
         return f'{self.tipo}'
 
@@ -22,8 +21,8 @@ class Pessoas(models.Model):
 
 class Faltas_Pessoas(models.Model):
     
-    data = models.DateField()
     pessoa = models.ForeignKey(Pessoas, on_delete=models.CASCADE)
+    data = models.DateField(default=now )
     falta = models.ForeignKey(Faltas, on_delete=models.CASCADE)
     qtd_dias = models.IntegerField(default=1)
 
