@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from .models import Faltas, Pessoas, Faltas_Pessoas, Pontuacoes
 from .forms import formularioPessoa, formularioTF, formularioLF
 from django.views import View
+from django.contrib import messages
 # Create your views here.
 
 
@@ -186,9 +187,10 @@ def pessoas_faltas(request, pessoa_id):
         if form.is_valid() and data_lancamento > admissao and lancar_falta(data_lancamento, pessoa_id):
         
             form.save()
+            messages.success(request,"Falta registrada!")
             return redirect('lancarfalta',pessoa_id)
         else:
-            print(f'Não salvo: Data de Admissão da Pessoa: {admissao}')
+            messages.error(request,"Não foi possível registrar a falta!",'danger')
     else:
         form = formularioLF(initial={'pessoa':pessoa})
     return render(request,'template/lancar_falta.html', {'form':form, 'pessoa':pessoa})
@@ -201,6 +203,7 @@ def atualizar_pessoa(request, pessoa_id):
         form = formularioPessoa(request.POST, instance=pessoa)
         if form.is_valid():
             form.save()
+            messages.success(request,"Pessoa atualizada!")
             return redirect('listarpessoas')
     else:
         form = formularioPessoa(instance=pessoa)
@@ -214,6 +217,7 @@ def pessoas(request):
         form = formularioPessoa(request.POST)
         if form.is_valid():
             form.save()
+            messages.success(request,"Pessoa registrada!")
             return redirect('listarpessoas')
     else:
 
@@ -400,23 +404,26 @@ def encerrar_ano(request, pessoa_id, ano):
     cargo_a, funcao_a, ue_a =   gerar_pontuacao_anual(ano,pessoa,'a')
     soma_a = cargo_a + funcao_a + ue_a
     anos, pessoa = listar_anos(pessoa.id)
-    mensagem =f'Não foi possível encerrar o ano {ano}!'
-   
+    
     try:
         if anos.index(ano) == 0 and soma_a == 0:
             pontuacao = Pontuacoes(ano=ano,cargo=cargo,funcao=funcao,ue=ue,pessoa=pessoa)
             pontuacao.save()
-            mensagem = f'Ano {ano} foi encerrado com sucesso!'
+            messages.success(request,f"Ano {ano} fechado com sucesso!")
         else: 
             if soma_a != 0:
                 pontuacao = Pontuacoes(ano=ano,cargo=cargo,funcao=funcao,ue=ue,pessoa=pessoa)
                 pontuacao.save()
-                mensagem = f'Ano {ano} foi encerrado com sucesso!'   
+                messages.success(request,f"Ano {ano} fechado com sucesso!")
+            else:
+                messages.info(request,f"Ano fechamento - { ano }! \n Ano anterior {ano-1} aberto!",'primary')
+
     except:
-        return render(request, 'template/encerrar_ano.html', {'mensagem':mensagem, 'pessoa':pessoa})
+        # return render(request, 'template/encerrar_ano.html', {'mensagem':mensagem, 'pessoa':pessoa})
+        messages.info(request,f'Ano {ano} já fechado!')
 
             
-    return render(request, 'template/encerrar_ano.html', {'mensagem':mensagem,'pessoa':pessoa})
+    return render(request, 'template/encerrar_ano.html', {'pessoa':pessoa})
 
     
 # recupera a pontuação do ano corrente 
