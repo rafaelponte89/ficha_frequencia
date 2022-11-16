@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from .models import Faltas, Pessoas, Faltas_Pessoas, Pontuacoes
+from .models import Faltas, Pessoas, Faltas_Pessoas, Pontuacoes, PontuacoesAtribuicoes
 from .forms import formularioPessoa, formularioTF, formularioLF
 from django.views import View
 from django.contrib import messages
@@ -250,7 +250,7 @@ def listar_ficha(request, pessoa_id):
     return render(request,'template/listar_ficha.html',{'anos':anos_status, 'pessoa':pessoa})
 
 # ainda não utilizada
-def faltas_a_descontar(ano,pessoa):
+def faltas_a_descontar(ano,pessoa, tolerancia=6):
     # atribuição 
     maior = Faltas_Pessoas.objects.all().filter(data__gte=f'{ano-1}-11-01')
     maior = maior.filter(pessoa=pessoa)
@@ -262,21 +262,26 @@ def faltas_a_descontar(ano,pessoa):
 
     for a in atrib:
         if a.falta.tipo in ['J','AM']:
-            n_faltas += 1
-    
+            n_faltas += a.qtd_dias
+
+    if n_faltas >= tolerancia:
+        n_faltas -= tolerancia
+    else:
+        n_faltas = 0
+
     return n_faltas
 
 
 # def render_to_pdf(template_src, context_dict={}):
-    template = get_template(template_src)
+    # template = get_template(template_src)
     
-    html = template.render(context_dict)
-    result = BytesIO()
+    # html = template.render(context_dict)
+    # result = BytesIO()
 
-    pdf = pisa.pisaDocument(BytesIO(html.encode('ISO-8859-1')), result)
-    if not pdf.err:
-        return HttpResponse(result.getvalue(), content_type='application/pdf')
-    return None
+    # pdf = pisa.pisaDocument(BytesIO(html.encode('ISO-8859-1')), result)
+    # if not pdf.err:
+    #     return HttpResponse(result.getvalue(), content_type='application/pdf')
+    # return None
 
 # conta os tipos de faltas construindo um dicionário
 def contar_tipos_faltas(faltas):
@@ -313,10 +318,12 @@ def faltas(request):
 def gerar_ficha(request, pessoa_id, ano, pdf=None):
     
     pessoa = Pessoas.objects.get(pk=pessoa_id)
+    print(faltas_a_descontar(ano, pessoa))
     meses = configurar_meses(ano)
     meses = configurar_meses_v2(ano,pessoa_id)
     cargo, funcao, ue  = gerar_pontuacao_anual(ano,pessoa)
     cargo_a, funcao_a, ue_a  = gerar_pontuacao_anual(ano,pessoa,'a')
+    cargo_at, funcao_at, ue_at = gerar_pontuacao_atribuicao(ano, pessoa)
     dias = range(1,32)
     faltas = Faltas_Pessoas.objects.all().order_by('data').filter(data__year=ano).filter(pessoa=pessoa_id)
     admissao = pessoa.admissao
@@ -378,6 +385,9 @@ def gerar_ficha(request, pessoa_id, ano, pdf=None):
         'funcao_a': funcao_a,
         'cargo_a': cargo_a,
         'ue_a': ue_a,
+        'funcao_at':funcao_at,
+        'cargo_at': cargo_at,
+        'ue_at': ue_at,
         'nome': pessoa.nome,
         'pessoa': pessoa,
         'dias': dias,
@@ -388,9 +398,7 @@ def gerar_ficha(request, pessoa_id, ano, pdf=None):
 
     }
 
-    # if pdf != None: 
-    #     pdf = render_to_pdf('template/ficha_cem.html',contexto)
-    #     return HttpResponse(pdf, content_type='application/pdf')
+   
         
     return render(request,'template/ficha_cem.html', {'contexto':contexto})
 
@@ -402,6 +410,7 @@ def encerrar_ano(request, pessoa_id, ano):
     pessoa = Pessoas.objects.get(pk=pessoa_id)
     cargo, funcao, ue =   gerar_pontuacao_anual(ano,pessoa)
     cargo_a, funcao_a, ue_a =   gerar_pontuacao_anual(ano,pessoa,'a')
+    cargo_at, funcao_at, ue_at = gerar_pontuacao_atribuicao(ano, pessoa)
     soma_a = cargo_a + funcao_a + ue_a
     anos, pessoa = listar_anos(pessoa.id)
     
@@ -409,11 +418,15 @@ def encerrar_ano(request, pessoa_id, ano):
         if anos.index(ano) == 0 and soma_a == 0:
             pontuacao = Pontuacoes(ano=ano,cargo=cargo,funcao=funcao,ue=ue,pessoa=pessoa)
             pontuacao.save()
+            pontuacao_at = PontuacoesAtribuicoes(ano=ano,cargo=cargo_at,funcao=funcao_at,ue=ue_at,pessoa=pessoa)
+            pontuacao_at.save()
             messages.success(request,f"Ano {ano} fechado com sucesso!")
         else: 
             if soma_a != 0:
                 pontuacao = Pontuacoes(ano=ano,cargo=cargo,funcao=funcao,ue=ue,pessoa=pessoa)
+                pontuacao_at = PontuacoesAtribuicoes(ano=ano,cargo=cargo_at,funcao=funcao_at,ue=ue_at,pessoa=pessoa)
                 pontuacao.save()
+                pontuacao_at.save()
                 messages.success(request,f"Ano {ano} fechado com sucesso!")
             else:
                 messages.info(request,f"Ano fechamento - { ano }! \n Ano anterior {ano-1} aberto!",'primary')
@@ -440,10 +453,65 @@ def checar_existencia_pontuacao(ano, pessoa):
 
     return  status 
 
-def gerar_pontuacao_anual(ano,pessoa, tipo='c'):
-    '''a - ano anterior, c - ano corrente'''
+def contar_dias(data_inicial, data_final):
+    dias = (data_final - data_inicial ).days + 1
 
-    dias = retornar_dias(ano) # ano corrente
+    return dias
+
+
+def gerar_pontuacao_atribuicao(ano,pessoa, tipo='c'):
+    '''a - ano anterior, c - ano corrente '''
+
+    data_bas_ini = datetime.strptime(f'{ano-1}-11-01','%Y-%m-%d',).date()
+    data_bas_fim = datetime.strptime(f'{ano}-10-31','%Y-%m-%d').date()
+
+    if pessoa.admissao > data_bas_ini:
+        data_bas_ini = pessoa.admissao
+
+    dias = contar_dias(data_bas_ini, data_bas_fim)
+    
+
+    q1 = PontuacoesAtribuicoes.objects.filter(ano=ano-1) # ano anterior
+    q2 = PontuacoesAtribuicoes.objects.filter(pessoa=pessoa)
+
+    pontuacao_anterior = q1.intersection(q2)
+    
+    # ano anterior
+    if tipo == 'a':
+        if len(pontuacao_anterior) == 0:
+            cargo = 0
+            funcao = 0
+            ue = 0
+           
+        else:
+            cargo = pontuacao_anterior[0].cargo
+            funcao = pontuacao_anterior[0].funcao
+            ue = pontuacao_anterior[0].ue
+ 
+    else:
+        # ano corrente
+        if len(pontuacao_anterior) == 0 :
+            cargo = dias -faltas_a_descontar(ano,pessoa)
+            funcao = dias - faltas_a_descontar(ano,pessoa)
+            ue = dias - faltas_a_descontar(ano,pessoa)
+        else:
+            cargo = int(pontuacao_anterior[0].cargo) + dias - faltas_a_descontar(ano,pessoa)
+            funcao = int(pontuacao_anterior[0].funcao) + dias - faltas_a_descontar(ano,pessoa)
+            ue = int(pontuacao_anterior[0].ue) + dias - faltas_a_descontar(ano,pessoa)
+             
+    return cargo, funcao, ue
+
+def gerar_pontuacao_anual(ano,pessoa, tipo='c'):
+    '''a - ano anterior, c - ano corrente '''
+
+    data_bas_ini = datetime.strptime(f'{ano}-01-01','%Y-%m-%d',).date()
+    data_bas_fim = datetime.strptime(f'{ano}-12-31','%Y-%m-%d').date()
+
+    if pessoa.admissao > data_bas_ini:
+        data_bas_ini = pessoa.admissao
+
+    dias = contar_dias(data_bas_ini, data_bas_fim)
+    
 
     q1 = Pontuacoes.objects.filter(ano=ano-1) # ano anterior
     q2 = Pontuacoes.objects.filter(pessoa=pessoa)
@@ -461,7 +529,7 @@ def gerar_pontuacao_anual(ano,pessoa, tipo='c'):
             cargo = pontuacao_anterior[0].cargo
             funcao = pontuacao_anterior[0].funcao
             ue = pontuacao_anterior[0].ue
-            
+ 
     else:
         # ano corrente
         if len(pontuacao_anterior) == 0 :

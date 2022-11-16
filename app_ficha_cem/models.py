@@ -44,4 +44,15 @@ class Pontuacoes(models.Model):
     class Meta:
         unique_together = ('ano','pessoa')
 
+class PontuacoesAtribuicoes(models.Model):
+
+    ano = models.CharField(max_length=5)
+    cargo = models.CharField(max_length=5)
+    funcao = models.CharField(max_length=5)
+    ue = models.CharField(max_length=5)
+    pessoa = models.ForeignKey(Pessoas, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('ano','pessoa')
+
    
