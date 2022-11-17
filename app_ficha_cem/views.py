@@ -249,21 +249,35 @@ def listar_ficha(request, pessoa_id):
   
     return render(request,'template/listar_ficha.html',{'anos':anos_status, 'pessoa':pessoa})
 
+
+# obervação implementar dicionario de dados para contar dadas entre os extremos
 # ainda não utilizada
 def faltas_a_descontar(ano,pessoa, tolerancia=6):
     # atribuição 
+    data_inicial = datetime(ano-1,11,1)
+    data_final = datetime(ano,10,31)
     maior = Faltas_Pessoas.objects.all().filter(data__gte=f'{ano-1}-11-01')
     maior = maior.filter(pessoa=pessoa)
     menor = Faltas_Pessoas.objects.all().filter(data__lte=f'{ano}-10-31')
     menor = menor.filter(pessoa=pessoa)
     atrib = maior.intersection(menor)
-
-    n_faltas = 0
-
-    for a in atrib:
-        if a.falta.tipo in ['J','AM']:
-            n_faltas += a.qtd_dias
-
+    datas = []
+   
+    for fp in atrib:
+        if fp.falta.tipo in ['J','AM']:
+            data = datetime(fp.data.year, fp.data.month, fp.data.day)
+            
+            for dias in range(1,fp.qtd_dias):
+                if data >= data_inicial and data <= data_final:
+                    datas.append(data)
+                data += timedelta(days=1)
+                data = datetime(data.year, data.month, data.day)
+            else:
+                if data >= data_inicial and data <= data_final:
+                    datas.append(data)
+                
+    n_faltas = len(datas)
+    
     if n_faltas >= tolerancia:
         n_faltas -= tolerancia
     else:
@@ -271,17 +285,6 @@ def faltas_a_descontar(ano,pessoa, tolerancia=6):
 
     return n_faltas
 
-
-# def render_to_pdf(template_src, context_dict={}):
-    # template = get_template(template_src)
-    
-    # html = template.render(context_dict)
-    # result = BytesIO()
-
-    # pdf = pisa.pisaDocument(BytesIO(html.encode('ISO-8859-1')), result)
-    # if not pdf.err:
-    #     return HttpResponse(result.getvalue(), content_type='application/pdf')
-    # return None
 
 # conta os tipos de faltas construindo um dicionário
 def contar_tipos_faltas(faltas):
