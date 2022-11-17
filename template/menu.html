@@ -24,23 +24,24 @@
             <span class="navbar-toggler-icon"></span>
         </button>
 
-        
-        
-       
-        
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav mr-auto">
-                
-               
                 <li class="nav-item">
-                    <a class="nav-link active" href="{% url 'listarfaltas' %}">Faltas <i class="fas fa-id-card fa-lg"></i></a>
+                    <a class="nav-link" href="{% url 'listarfaltas' %}">Faltas <i
+                            class="fas fa-id-card fa-lg"></i></a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'listarpessoas' %}">Pessoas <i class="far fa-address-book fa-lg"></i></a>
+                    <a class="nav-link" href="{% url 'listarpessoas' %}">Pessoas <i
+                            class="far fa-address-book fa-lg"></i></a>
                 </li>
-                <li class="">
+                <li class="nav-item">
                     <a class="nav-link text-warning" href="{% url 'listarpessoas' %}">{{pessoa.nome}} {{pessoa.id}}</a>
                 </li>
+                {% for ano in contexto.anos %}
+                <li class="nav-item ">
+                    <a class="nav-link" href="{% url 'ficha' contexto.pessoa.id ano %}">{{ano}}</a>
+                </li>
+                {% endfor %}
 
     </nav>
 
@@ -68,6 +69,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
         crossorigin="anonymous"></script>
+  
 </body>
 
 </html>

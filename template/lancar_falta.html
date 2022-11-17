@@ -15,16 +15,20 @@
     let texto = "";
     falta.addEventListener("change", function () {
         texto = falta.options[falta.selectedIndex].text;
-        if (texto === "LN"){
+        if (texto === "NOJO"){
             document.getElementById("id_qtd_dias").value = 8;
             // document.getElementById("id_qtd_dias").disabled=true;
         }
-        else if (texto === "P") {
+        else if (texto === "PATERNIDADE") {
             document.getElementById("id_qtd_dias").value = 5;
             // document.getElementById("id_qtd_dias").disabled=true;
         }
-        else if (texto === "LP") {
+        else if (texto === "LICENÇA PRÊMIO") {
             document.getElementById("id_qtd_dias").value = 90;
+            // document.getElementById("id_qtd_dias").disabled=true;
+        }
+        else if (texto === "FÉRIAS") {
+            document.getElementById("id_qtd_dias").value = 30;
             // document.getElementById("id_qtd_dias").disabled=true;
         }
         else {

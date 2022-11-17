@@ -5,7 +5,6 @@ from django.views import View
 from django.contrib import messages
 # Create your views here.
 
-
 from io import BytesIO
 from xhtml2pdf import pisa
 from django.template.loader import get_template
@@ -148,7 +147,7 @@ def configurar_meses_v2(ano, pessoa_id):
     
     return meses
 
-# faz a pesquisa e incremento para verificar se existe alta lançada naquela data, impedindo lançamento em data
+# faz a pesquisa e incremento para verificar se existe falta lançada naquela data, impedindo lançamento em data
 # que já exista falta computada
 def lancar_falta(data_lanc, pessoa_id):
     q1 = Faltas_Pessoas.objects.filter(data__year=data_lanc.year)
@@ -162,7 +161,6 @@ def lancar_falta(data_lanc, pessoa_id):
             data = datetime(data.year, data.month, data.day)
             datas.append(data)
     
-   
     data_lanc = datetime(data_lanc.year, data_lanc.month, data_lanc.day)
 
     # se a data de lancamento já existe, falso para lançamento
@@ -234,7 +232,7 @@ def listar_anos(pessoa_id):
         if i.data.year not in anos and i.pessoa.id == pessoa_id:
             anos.append(i.data.year)
 
-    return anos, pessoa
+    return anos[-5:], pessoa
 
 def listar_ficha(request, pessoa_id):
     anos, pessoa = listar_anos(pessoa_id)
@@ -249,9 +247,8 @@ def listar_ficha(request, pessoa_id):
   
     return render(request,'template/listar_ficha.html',{'anos':anos_status, 'pessoa':pessoa})
 
-
-# obervação implementar dicionario de dados para contar dadas entre os extremos
-# ainda não utilizada
+# desconta faltas conforme a data inicial e data final levando em conta 
+# a tolerancia 
 def faltas_a_descontar(ano,pessoa, tolerancia=6):
     # atribuição 
     data_inicial = datetime(ano-1,11,1)
@@ -284,7 +281,6 @@ def faltas_a_descontar(ano,pessoa, tolerancia=6):
         n_faltas = 0
 
     return n_faltas
-
 
 # conta os tipos de faltas construindo um dicionário
 def contar_tipos_faltas(faltas):
@@ -320,6 +316,7 @@ def faltas(request):
 
 def gerar_ficha(request, pessoa_id, ano, pdf=None):
     
+    anos, pessoa = listar_anos(pessoa_id)
     pessoa = Pessoas.objects.get(pk=pessoa_id)
     print(faltas_a_descontar(ano, pessoa))
     meses = configurar_meses(ano)
@@ -395,14 +392,12 @@ def gerar_ficha(request, pessoa_id, ano, pdf=None):
         'pessoa': pessoa,
         'dias': dias,
         'tp_faltas': tipo_faltas,
-        # 'status': 'aberto',
-        'admissao':admissao
+        'admissao':admissao,
+        'anos':anos
         # 'pagesize':'A4'
 
     }
-
    
-        
     return render(request,'template/ficha_cem.html', {'contexto':contexto})
 
 def index(request):
@@ -437,11 +432,9 @@ def encerrar_ano(request, pessoa_id, ano):
     except:
         # return render(request, 'template/encerrar_ano.html', {'mensagem':mensagem, 'pessoa':pessoa})
         messages.info(request,f'Ano {ano} já fechado!')
-
-            
+       
     return render(request, 'template/encerrar_ano.html', {'pessoa':pessoa})
 
-    
 # recupera a pontuação do ano corrente 
 def checar_existencia_pontuacao(ano, pessoa):
     status = True
@@ -461,7 +454,6 @@ def contar_dias(data_inicial, data_final):
 
     return dias
 
-
 def gerar_pontuacao_atribuicao(ano,pessoa, tipo='c'):
     '''a - ano anterior, c - ano corrente '''
 
@@ -473,7 +465,6 @@ def gerar_pontuacao_atribuicao(ano,pessoa, tipo='c'):
 
     dias = contar_dias(data_bas_ini, data_bas_fim)
     
-
     q1 = PontuacoesAtribuicoes.objects.filter(ano=ano-1) # ano anterior
     q2 = PontuacoesAtribuicoes.objects.filter(pessoa=pessoa)
 
@@ -515,7 +506,6 @@ def gerar_pontuacao_anual(ano,pessoa, tipo='c'):
 
     dias = contar_dias(data_bas_ini, data_bas_fim)
     
-
     q1 = Pontuacoes.objects.filter(ano=ano-1) # ano anterior
     q2 = Pontuacoes.objects.filter(pessoa=pessoa)
 

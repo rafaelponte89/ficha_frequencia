@@ -11,7 +11,7 @@ class Faltas(models.Model):
     descricao =  models.CharField(max_length=30)
     
     def __str__(self):
-        return f'{self.tipo}'
+        return f'{self.descricao}'
 
 
 class Pessoas(models.Model):
