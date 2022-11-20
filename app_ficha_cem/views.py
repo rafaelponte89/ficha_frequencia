@@ -565,19 +565,19 @@ def pdf(request, pessoa_id, ano):
 
     for k,v in contexto['meses'].items():
         v.insert(0,k)
-        v.insert(0,k)
+       
     
     data_faltas = [m for m in contexto['meses'].values()]
     data_faltas.insert(0, mes_dias)
 
+    t_faltas = Table(data_faltas)
     # data_tipos = [
     #     [k for k,v in tipo_falta.items()],
       
     #     [ str(f'{v[0]}') for k,v in tipo_falta.items()],
     #     [ str(f'{v[1]}') for k,v in tipo_falta.items()],
     # ]
-
-    t_faltas = Table(data_faltas, style=[('GRID',(0,0),(-1,-1), 0.5, colors.black),
+    style_table = TableStyle([('GRID',(0,0),(-1,-1), 0.5, colors.black),
                             ('LEFTPADDING',(0,0),(-1,-1),2),
                             ('TOPPADDING',(0,0),(-1,-1),2),
                             ('BOTTOMPADDING',(0,0),(-1,-1),2),
@@ -585,8 +585,22 @@ def pdf(request, pessoa_id, ano):
                             ('ALIGN',(0,0),(-1,-1),'CENTER'),
                             ('FONTSIZE',(0,0), (-1,-1),8.5),  
                             
-     
                             ])
+
+    tipos_faltas = Faltas.objects.all()
+    tp_faltas = []
+
+    for tp in tipos_faltas:
+        tp_faltas.append(tp.tipo)
+
+    # aplica estilo diferente conforme a condição, ou seja, as falas ficam com cor de background
+    for row, values in enumerate(data_faltas):
+       for column, value in enumerate(values):
+           print(column, value)
+           if value in tp_faltas:
+               style_table.add('BACKGROUND',(column,row),(column,row),colors.lightblue)
+
+    t_faltas.setStyle(style_table)
 
     # t_tipos = Table(data_tipos, style=[('GRID',(0,0),(-1,-1), 0.5, colors.black),
     #                         ('ALIGN',(0,0),(-1,-1),'CENTER'),
@@ -605,15 +619,17 @@ def pdf(request, pessoa_id, ano):
     elements.append(Paragraph('<para><img src="https://www.orlandia.sp.gov.br/novo/wp-content/uploads/2017/01/brasaoorlandia.png" width="40" height="40"/> </para>'))
     elements.append(Paragraph(f"<strong>Ficha Cem - Ano</strong>:{contexto['ano']}", styleH))
     elements.append(Paragraph(f"<strong>Nome</strong>: {contexto['pessoa'].nome}", styleB))
+
+    
     #Send the data and build the file
     elements.append(t_faltas)
     
     # # elements.append(t_tipos)
     doc.build(elements)
     
-
+    
     response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename=your_name.pdf'
+    response['Content-Disposition'] = f'attachment; filename={contexto["pessoa"].nome}_{contexto["ano"]}.pdf'
     response.write(buffer.getvalue())
     buffer.close()
 
