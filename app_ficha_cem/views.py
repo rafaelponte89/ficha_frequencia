@@ -10,7 +10,7 @@ from xhtml2pdf import pisa
 from django.template.loader import get_template
 from datetime import datetime, timedelta
 from django.http import HttpResponse
-
+import reportlab
 # determina se o ano é bissexto
 def bissexto(ano):
 
@@ -272,9 +272,9 @@ def faltas_a_descontar(ano,pessoa, tolerancia=6):
             else:
                 if data >= data_inicial and data <= data_final:
                     datas.append(data)
-                
+               
     n_faltas = len(datas)
-    
+  
     if n_faltas >= tolerancia:
         n_faltas -= tolerancia
     else:
@@ -314,12 +314,11 @@ def faltas(request):
         form = formularioTF()
     return render(request,'template/cadastrar_tipo_falta.html',{'form':form, 'faltas':faltas})
 
-def gerar_ficha(request, pessoa_id, ano, pdf=None):
-    
+def buscar_informacoes_ficha(pessoa_id, ano):
     anos, pessoa = listar_anos(pessoa_id)
     pessoa = Pessoas.objects.get(pk=pessoa_id)
-    print(faltas_a_descontar(ano, pessoa))
-    meses = configurar_meses(ano)
+    print('descontar',faltas_a_descontar(ano, pessoa))
+    # meses = configurar_meses(ano)
     meses = configurar_meses_v2(ano,pessoa_id)
     cargo, funcao, ue  = gerar_pontuacao_anual(ano,pessoa)
     cargo_a, funcao_a, ue_a  = gerar_pontuacao_anual(ano,pessoa,'a')
@@ -375,7 +374,7 @@ def gerar_ficha(request, pessoa_id, ano, pdf=None):
             elif mes == 12:
                 meses['dezembro'][dia] = falta.falta.tipo
 
-
+   
     contexto = {
         'meses': meses,
         'ano': ano,
@@ -397,7 +396,17 @@ def gerar_ficha(request, pessoa_id, ano, pdf=None):
         # 'pagesize':'A4'
 
     }
-   
+
+    return contexto
+
+def gerar_ficha(request, pessoa_id, ano):
+    
+    contexto = buscar_informacoes_ficha(pessoa_id, ano)
+    # import copy
+    # tipo_falta_copy = copy.deepcopy(tipo_faltas)
+    # meses_copy = copy.deepcopy(meses)
+    # print(tipo_faltas)
+    # pdf(meses_copy, tipo_falta_copy)
     return render(request,'template/ficha_cem.html', {'contexto':contexto})
 
 def index(request):
@@ -535,3 +544,103 @@ def gerar_pontuacao_anual(ano,pessoa, tipo='c'):
             ue = int(pontuacao_anterior[0].ue) + dias
              
     return cargo, funcao, ue
+
+#em desenvolvimento parte de geração de pdf ficha cem
+def pdf(request, pessoa_id, ano):
+
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import A4, landscape
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Image
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    contexto = buscar_informacoes_ficha(pessoa_id,ano)
+   
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(A4), rightMargin=30,leftMargin=30, topMargin=30,bottomMargin=18)
+   
+    elements = []
+
+    mes_dias = ["Mês/Dia"]
+    for i in range(1,32):
+        mes_dias.append(i)
+
+    for k,v in contexto['meses'].items():
+        v.insert(0,k)
+        v.insert(0,k)
+    
+    data_faltas = [m for m in contexto['meses'].values()]
+    data_faltas.insert(0, mes_dias)
+
+    # data_tipos = [
+    #     [k for k,v in tipo_falta.items()],
+      
+    #     [ str(f'{v[0]}') for k,v in tipo_falta.items()],
+    #     [ str(f'{v[1]}') for k,v in tipo_falta.items()],
+    # ]
+
+    t_faltas = Table(data_faltas, style=[('GRID',(0,0),(-1,-1), 0.5, colors.black),
+                            ('LEFTPADDING',(0,0),(-1,-1),2),
+                            ('TOPPADDING',(0,0),(-1,-1),2),
+                            ('BOTTOMPADDING',(0,0),(-1,-1),2),
+                            ('RIGHTPADDING',(0,0),(-1,-1),2),
+                            ('ALIGN',(0,0),(-1,-1),'CENTER'),
+                            ('FONTSIZE',(0,0), (-1,-1),8.5),  
+                            
+     
+                            ])
+
+    # t_tipos = Table(data_tipos, style=[('GRID',(0,0),(-1,-1), 0.5, colors.black),
+    #                         ('ALIGN',(0,0),(-1,-1),'CENTER'),
+    #                         ('FONTSIZE',(0,0), (-1,-1),8.5),        
+    #                         ])
+    styles = getSampleStyleSheet()
+    
+    styleH = ParagraphStyle('Cabeçalho',
+                            fontSize=20,
+                            parent=styles['Heading1'],
+                            alignment=1,
+                            spaceAfter=14)
+    
+    styleB = ParagraphStyle('Corpo',
+                        spaceAfter=14)    
+    elements.append(Paragraph('<para><img src="https://www.orlandia.sp.gov.br/novo/wp-content/uploads/2017/01/brasaoorlandia.png" width="40" height="40"/> </para>'))
+    elements.append(Paragraph(f"<strong>Ficha Cem - Ano</strong>:{contexto['ano']}", styleH))
+    elements.append(Paragraph(f"<strong>Nome</strong>: {contexto['pessoa'].nome}", styleB))
+    #Send the data and build the file
+    elements.append(t_faltas)
+    
+    # # elements.append(t_tipos)
+    doc.build(elements)
+    
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename=your_name.pdf'
+    response.write(buffer.getvalue())
+    buffer.close()
+
+    return response
+   
+    
+
+import io
+from django.http import FileResponse
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import landscape, A4
+from reportlab.lib.units import cm, inch
+from reportlab.lib import colors
+def imprimir(request, pessoa_id, ano):
+   
+    buffer = io.BytesIO()
+
+    p = canvas.Canvas(buffer,landscape(A4))
+    p.setStrokeColor(colors.black)
+    for m in range(1,13):
+        for d in range(1,32):
+            p.grid([d*cm, d*cm, d*cm],[d/2*cm, d/3*cm, d/4*cm])
+
+    p.grid([4*cm, 6*cm, 8*cm],[2*cm, 3*cm, 4*cm])
+    p.showPage()
+    p.save()
+    buffer.seek(0)
+    
+   
+    return FileResponse(buffer, as_attachment=True, filename='teste.pdf')

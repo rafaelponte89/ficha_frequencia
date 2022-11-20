@@ -1,5 +1,5 @@
 from .views import gerar_ficha, faltas, atualizar_pessoa, \
-      listar_ficha, encerrar_ano, pessoas, pessoas_faltas
+      listar_ficha, encerrar_ano, pessoas, pessoas_faltas, pdf, imprimir
 from django.urls.conf import path
 urlpatterns = [
     path('pessoas/', pessoas, name="listarpessoas"),
@@ -9,5 +9,7 @@ urlpatterns = [
     path('pessoas/<int:pessoa_id>/fichas/<int:ano>', gerar_ficha, name='ficha'),
     path('faltas/', faltas, name="listarfaltas"),
     path('pessoas/<int:pessoa_id>/fichas/encerramento/<int:ano>', encerrar_ano, name='encerrarano' ),
+
+    path('pessoas/<int:pessoa_id>/fichas/<int:ano>/', pdf, name='imprimir'),
    
 ]
