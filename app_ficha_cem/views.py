@@ -329,10 +329,10 @@ def buscar_informacoes_ficha(pessoa_id, ano):
     dia_adm= pessoa.admissao.day
     mes_adm = pessoa.admissao.month
     ano_adm = pessoa.admissao.year
-    admissao = f'{dia_adm}/{mes_adm}/{ano_adm}'
+   
     
     tipo_faltas=contar_tipos_faltas(faltas)
-
+    print(tipo_faltas)
     data = ''
     for falta in faltas:
        
@@ -374,7 +374,14 @@ def buscar_informacoes_ficha(pessoa_id, ano):
             elif mes == 12:
                 meses['dezembro'][dia] = falta.falta.tipo
 
-   
+    pessoa.cpf = f'{pessoa.cpf[:3]}.{pessoa.cpf[3:6]}.{pessoa.cpf[6:9]}-{pessoa.cpf[-2:]}'
+    pessoa.admissao = f'{dia_adm}/{mes_adm}/{ano_adm}'
+    print(pessoa.efetivo)
+    if pessoa.efetivo:
+        pessoa.efetivo='Sim'
+    else:
+        pessoa.efetivo='Não'
+
     contexto = {
         'meses': meses,
         'ano': ano,
@@ -563,49 +570,67 @@ def pdf(request, pessoa_id, ano):
     for i in range(1,32):
         mes_dias.append(i)
 
+    mes_dias.append('Tempos')
+
     for k,v in contexto['meses'].items():
         v.insert(0,k)
+
+    print(len(contexto['meses']['fevereiro']))
+    contexto['meses']['janeiro'].append('Tempos')
+    if len(contexto['meses']['fevereiro']) == 29:
        
+        contexto['meses']['fevereiro'].extend(['','','','Função','Cargo','UE'])
+    else:
+        contexto['meses']['fevereiro'].extend(['','','Função','Cargo','UE'])
+    contexto['meses']['marco'].extend(['Atribuição'])
+    contexto['meses']['abril'].extend(['',contexto['funcao_at'], contexto['cargo_at'], contexto['ue_at']])
+    contexto['meses']['maio'].extend(['Anterior'])
+   
+    contexto['meses']['junho'].extend(['',contexto['funcao_a'], contexto['cargo_a'], contexto['ue_a']])
+    contexto['meses']['julho'].extend(['Atual'])
+    
+    contexto['meses']['agosto'].extend([contexto['funcao'], contexto['cargo'], contexto['ue']])
+
+    for k,v in contexto['tp_faltas'].items():
+        v.insert(0,k)
+
+    data_tp_falta = [tp for tp in contexto['tp_faltas'].values()]
     
     data_faltas = [m for m in contexto['meses'].values()]
+
     data_faltas.insert(0, mes_dias)
 
-    t_faltas = Table(data_faltas)
-    # data_tipos = [
-    #     [k for k,v in tipo_falta.items()],
-      
-    #     [ str(f'{v[0]}') for k,v in tipo_falta.items()],
-    #     [ str(f'{v[1]}') for k,v in tipo_falta.items()],
-    # ]
-    style_table = TableStyle([('GRID',(0,0),(-1,-1), 0.5, colors.black),
+    style_table_corpo = TableStyle([('GRID',(0,0),(-1,-1), 0.5, colors.black),
                             ('LEFTPADDING',(0,0),(-1,-1),2),
                             ('TOPPADDING',(0,0),(-1,-1),2),
                             ('BOTTOMPADDING',(0,0),(-1,-1),2),
                             ('RIGHTPADDING',(0,0),(-1,-1),2),
                             ('ALIGN',(0,0),(-1,-1),'CENTER'),
-                            ('FONTSIZE',(0,0), (-1,-1),8.5),  
-                            
+                            ('FONTSIZE',(0,0), (-1,-1),8.5), 
+                            ('SPAN',(32,0),(34,1)),
+                            ('SPAN',(32,3),(34,3)),
+                            ('SPAN',(32,5),(34,5)),
+                            ('SPAN',(32,7),(34,7)),
+                            ('SPAN',(32,9),(34,12)),             
                             ])
 
-    tipos_faltas = Faltas.objects.all()
-    tp_faltas = []
-
-    for tp in tipos_faltas:
-        tp_faltas.append(tp.tipo)
-
+    t_faltas = Table(data_faltas, hAlign='LEFT')
+   
+    
     # aplica estilo diferente conforme a condição, ou seja, as falas ficam com cor de background
     for row, values in enumerate(data_faltas):
        for column, value in enumerate(values):
-           print(column, value)
-           if value in tp_faltas:
-               style_table.add('BACKGROUND',(column,row),(column,row),colors.lightblue)
+        #    print(column, value)
+           if value in contexto['tp_faltas']:
+               style_table_corpo.add('BACKGROUND',(column,row),(column,row),colors.lightblue)
 
-    t_faltas.setStyle(style_table)
+    t_faltas.setStyle(style_table_corpo)
 
-    # t_tipos = Table(data_tipos, style=[('GRID',(0,0),(-1,-1), 0.5, colors.black),
-    #                         ('ALIGN',(0,0),(-1,-1),'CENTER'),
-    #                         ('FONTSIZE',(0,0), (-1,-1),8.5),        
-    #                         ])
+    t_tipos = Table(data_tp_falta, style=[('GRID',(0,0),(-1,-1), 0.5, colors.black),
+                            ('ALIGN',(0,0),(-1,-1),'CENTER'),
+                            ('FONTSIZE',(0,0), (-1,-1),8.5),
+                            ], hAlign='LEFT')
+
     styles = getSampleStyleSheet()
     
     styleH = ParagraphStyle('Cabeçalho',
@@ -615,16 +640,40 @@ def pdf(request, pessoa_id, ano):
                             spaceAfter=14)
     
     styleB = ParagraphStyle('Corpo',
-                        spaceAfter=14)    
+                        spaceAfter=14
+                    ) 
+    styleAss = ParagraphStyle('Assinatura',
+                        alignment=1
+                    ) 
+   
     elements.append(Paragraph('<para><img src="https://www.orlandia.sp.gov.br/novo/wp-content/uploads/2017/01/brasaoorlandia.png" width="40" height="40"/> </para>'))
     elements.append(Paragraph(f"<strong>Ficha Cem - Ano</strong>:{contexto['ano']}", styleH))
-    elements.append(Paragraph(f"<strong>Nome</strong>: {contexto['pessoa'].nome}", styleB))
-
+    # elements.append(Paragraph(f"<strong>Nome</strong>: {contexto['pessoa'].nome}  RM: {contexto['pessoa'].id}", styleB))
+    
+    data_pessoa = [
+        [Paragraph(f"<strong>Nome: </strong>{contexto['pessoa'].nome}"),Paragraph(f"<strong>Matrícula: </strong>{contexto['pessoa'].id}")],
+        [Paragraph(f"<strong>CPF: </strong>{contexto['pessoa'].cpf}"),Paragraph(f"<strong>Data de Admissão: </strong>{contexto['pessoa'].admissao}"),
+        Paragraph(f"<strong>Efetivo: </strong>{contexto['pessoa'].efetivo}")]
+    ]
+    tb_pessoa = Table(data_pessoa,style=[('GRID',(0,0),(-1,-1), 0.5, colors.white),
+                                ('ALIGN',(0,0),(-1,-1),'LEFT'),
+                            ('FONTSIZE',(0,0), (-1,-1),8.5),
+                            ],hAlign='LEFT')
     
     #Send the data and build the file
+    elements.append(tb_pessoa)
     elements.append(t_faltas)
-    
-    # # elements.append(t_tipos)
+
+    elements.append(Paragraph(f"", styleB))
+    elements.append(t_tipos)
+
+    elements.append(Paragraph('____________________________', styleAss))
+    elements.append(Paragraph('Nome', styleAss))
+    elements.append(Paragraph('Diretora',styleAss))
+    elements.append(Paragraph('RG:11.111.111',styleAss))
+
+
+
     doc.build(elements)
     
     

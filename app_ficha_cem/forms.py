@@ -1,9 +1,14 @@
 from django import forms
 from .models import Pessoas, Faltas, Faltas_Pessoas
-from django.forms.widgets import SelectDateWidget
+from django.forms.widgets import SelectDateWidget, RadioSelect
 from django.utils.timezone import now
+from .models import Pessoas
 class formularioPessoa(forms.ModelForm):
+    id = forms.CharField(max_length=6, required=True)
     nome = forms.CharField(max_length=150, required=True)
+    cpf = forms.CharField(max_length=11, required=True)
+    efetivo = forms.ChoiceField(choices=Pessoas.EFETIVO,widget= forms.RadioSelect)
+ 
     admissao =  forms.DateField(initial=now,
     widget=SelectDateWidget(months={1:'Janeiro', 
                                     2:'Fevereiro',
@@ -13,7 +18,7 @@ class formularioPessoa(forms.ModelForm):
     )
     class Meta:
         model = Pessoas
-        fields = ['nome','admissao']
+        fields = ['id','nome','cpf','admissao','efetivo']
 
 # formulário tipo de faltas
 class formularioTF(forms.ModelForm):

@@ -15,10 +15,16 @@ class Faltas(models.Model):
 
 
 class Pessoas(models.Model):
-    # id = models.CharField(max_length=6, primary_key=True)
+    EFETIVO =  (
+     (True,'Sim'),
+     (False,'Não')
+    )
+    id = models.CharField(max_length=6, primary_key=True)
     nome = models.CharField(max_length=150)
+    cpf = models.CharField(max_length=11, default='11111111111')
     admissao = models.DateField(default='1991-01-01')
-
+    efetivo = models.BooleanField(choices=EFETIVO, verbose_name='Efetivo: ', default=False)
+    
 class Faltas_Pessoas(models.Model):
     
     pessoa = models.ForeignKey(Pessoas, on_delete=models.CASCADE)
