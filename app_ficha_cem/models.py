@@ -4,7 +4,6 @@ from django.utils.timezone import now
 
 # licença nojo 8 dias corridos
 # licença paternidade 5 dias úteis
-
 class Faltas(models.Model):
    
     tipo = models.CharField(max_length=3)
@@ -12,6 +11,12 @@ class Faltas(models.Model):
     
     def __str__(self):
         return f'{self.descricao}'
+
+class Cargos(models.Model):
+    cargo = models.CharField(max_length=50)
+
+    def __str__(self):
+        return f'{self.cargo}'
 
 
 class Pessoas(models.Model):
@@ -21,10 +26,12 @@ class Pessoas(models.Model):
     )
     id = models.CharField(max_length=6, primary_key=True)
     nome = models.CharField(max_length=150)
+    dt_nasc = models.DateField(default='1991-01-01')
     cpf = models.CharField(max_length=11, default='11111111111')
     admissao = models.DateField(default='1991-01-01')
-    efetivo = models.BooleanField(choices=EFETIVO, verbose_name='Efetivo: ', default=False)
-    
+    efetivo = models.BooleanField(choices=EFETIVO, default=False)
+    cargo = models.ForeignKey(Cargos, on_delete=models.CASCADE, default=1)
+
 class Faltas_Pessoas(models.Model):
     
     pessoa = models.ForeignKey(Pessoas, on_delete=models.CASCADE)

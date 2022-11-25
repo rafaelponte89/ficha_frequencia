@@ -1,0 +1,30 @@
+{% extends 'template/menu.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+<form method="POST">
+    {% csrf_token %}
+    {{ form|crispy }}
+
+    <div clas="form-group">
+        <button class="btn btn-outline-dark">Gravar</button>
+    </div>
+
+</form>
+
+<table class="table table-hover">
+    <thead>
+        <tr>
+        
+            <th scope="col">Cargo</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for cargo in cargos %}
+        <tr>
+            <td>{{cargo.cargo}}</td>
+        </tr>
+        {% endfor %}
+        </tr>
+    </tbody>
+</table>
+{% endblock content %}

@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
-from .models import Faltas, Pessoas, Faltas_Pessoas, Pontuacoes, PontuacoesAtribuicoes
-from .forms import formularioPessoa, formularioTF, formularioLF
+from .models import Faltas, Pessoas, Faltas_Pessoas, Pontuacoes, PontuacoesAtribuicoes, Cargos
+from .forms import formularioPessoa, formularioTF, formularioLF, formularioCargo
 from django.views import View
 from django.contrib import messages
 # Create your views here.
@@ -302,6 +302,18 @@ def contar_tipos_faltas(faltas):
 
     return tipo_faltas
 
+
+def cargos(request):
+    cargos = Cargos.objects.all()
+    if request.method == 'POST':
+        form = formularioCargo(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('listarcargos')
+    else:
+        form = formularioCargo()
+    return render(request,'template/cadastrar_cargo.html',{'form':form, 'cargos':cargos})
+
 # listar e incluir faltas
 def faltas(request):
     faltas = Faltas.objects.all()
@@ -373,6 +385,7 @@ def buscar_informacoes_ficha(pessoa_id, ano):
                 meses['novembro'][dia] = falta.falta.tipo
             elif mes == 12:
                 meses['dezembro'][dia] = falta.falta.tipo
+
 
     pessoa.cpf = f'{pessoa.cpf[:3]}.{pessoa.cpf[3:6]}.{pessoa.cpf[6:9]}-{pessoa.cpf[-2:]}'
     pessoa.admissao = f'{dia_adm}/{mes_adm}/{ano_adm}'
@@ -646,7 +659,7 @@ def pdf(request, pessoa_id, ano):
                         alignment=1
                     ) 
    
-    elements.append(Paragraph('<para><img src="https://www.orlandia.sp.gov.br/novo/wp-content/uploads/2017/01/brasaoorlandia.png" width="40" height="40"/> </para>'))
+    # elements.append(Paragraph('<para><img src="https://www.orlandia.sp.gov.br/novo/wp-content/uploads/2017/01/brasaoorlandia.png" width="40" height="40"/> </para>'))
     elements.append(Paragraph(f"<strong>Ficha Cem - Ano</strong>:{contexto['ano']}", styleH))
     # elements.append(Paragraph(f"<strong>Nome</strong>: {contexto['pessoa'].nome}  RM: {contexto['pessoa'].id}", styleB))
     
