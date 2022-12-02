@@ -342,6 +342,12 @@ def buscar_informacoes_ficha(pessoa_id, ano):
     dia_adm= pessoa.admissao.day
     mes_adm = pessoa.admissao.month
     ano_adm = pessoa.admissao.year
+    cargo_disciplina = tuple(str(pessoa.cargo).split('-'))
+    cargo, disciplina = cargo_disciplina
+    
+    print(cargo, disciplina)
+    # cargo = 
+    # disciplina = 
    
     tipo_faltas=contar_tipos_faltas(faltas)
     print(tipo_faltas)
@@ -399,6 +405,7 @@ def buscar_informacoes_ficha(pessoa_id, ano):
         'ano': ano,
         'funcao': funcao,
         'cargo': cargo,
+        'disciplina': disciplina,
         'ue': ue,
         'funcao_a': funcao_a,
         'cargo_a': cargo_a,
@@ -658,7 +665,8 @@ def pdf(request, pessoa_id, ano):
     # elements.append(Paragraph(f"<strong>Nome</strong>: {contexto['pessoa'].nome}  RM: {contexto['pessoa'].id}", styleB))
     
     data_pessoa = [
-        [Paragraph(f"<strong>Nome: </strong>{contexto['pessoa'].nome}"),Paragraph(f"<strong>Matrícula: </strong>{contexto['pessoa'].id}")],
+        [Paragraph(f"<strong>Nome: </strong>{contexto['pessoa'].nome}"),Paragraph(f"<strong>Matrícula: </strong>{contexto['pessoa'].id}"),
+        Paragraph(f"<strong>Cargo: </strong>{contexto['cargo']}"), Paragraph(f"<strong>Disciplina: </strong>{contexto['disciplina']}")],
         [Paragraph(f"<strong>CPF: </strong>{contexto['pessoa'].cpf}"),Paragraph(f"<strong>Data de Admissão: </strong>{contexto['pessoa'].admissao}"),
         Paragraph(f"<strong>Efetivo: </strong>{contexto['pessoa'].efetivo}")]
     ]
@@ -676,8 +684,8 @@ def pdf(request, pessoa_id, ano):
 
     elements.append(Paragraph('____________________________', styleAss))
     elements.append(Paragraph('Nome', styleAss))
-    elements.append(Paragraph('Diretora',styleAss))
     elements.append(Paragraph('RG:11.111.111',styleAss))
+    elements.append(Paragraph('Diretora',styleAss))
 
     doc.build(elements)
     
