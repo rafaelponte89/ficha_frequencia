@@ -210,9 +210,11 @@ def atualizar_pessoa(request, pessoa_id):
 # listar e incluir pessoas
 def pessoas(request):
     pessoas = Pessoas.objects.all()
-
+    
+    
     if request.method == 'POST':
         form = formularioPessoa(request.POST)
+    
         if form.is_valid():
             form.save()
             messages.success(request,"Pessoa registrada!")
@@ -302,7 +304,6 @@ def contar_tipos_faltas(faltas):
 
     return tipo_faltas
 
-
 def cargos(request):
     cargos = Cargos.objects.all()
     if request.method == 'POST':
@@ -342,7 +343,6 @@ def buscar_informacoes_ficha(pessoa_id, ano):
     mes_adm = pessoa.admissao.month
     ano_adm = pessoa.admissao.year
    
-    
     tipo_faltas=contar_tipos_faltas(faltas)
     print(tipo_faltas)
     data = ''
@@ -386,7 +386,6 @@ def buscar_informacoes_ficha(pessoa_id, ano):
             elif mes == 12:
                 meses['dezembro'][dia] = falta.falta.tipo
 
-
     pessoa.cpf = f'{pessoa.cpf[:3]}.{pessoa.cpf[3:6]}.{pessoa.cpf[6:9]}-{pessoa.cpf[-2:]}'
     pessoa.admissao = f'{dia_adm}/{mes_adm}/{ano_adm}'
     print(pessoa.efetivo)
@@ -422,11 +421,7 @@ def buscar_informacoes_ficha(pessoa_id, ano):
 def gerar_ficha(request, pessoa_id, ano):
     
     contexto = buscar_informacoes_ficha(pessoa_id, ano)
-    # import copy
-    # tipo_falta_copy = copy.deepcopy(tipo_faltas)
-    # meses_copy = copy.deepcopy(meses)
-    # print(tipo_faltas)
-    # pdf(meses_copy, tipo_falta_copy)
+    
     return render(request,'template/ficha_cem.html', {'contexto':contexto})
 
 def index(request):
@@ -629,7 +624,6 @@ def pdf(request, pessoa_id, ano):
 
     t_faltas = Table(data_faltas, hAlign='LEFT')
    
-    
     # aplica estilo diferente conforme a condição, ou seja, as falas ficam com cor de background
     for row, values in enumerate(data_faltas):
        for column, value in enumerate(values):
@@ -685,10 +679,7 @@ def pdf(request, pessoa_id, ano):
     elements.append(Paragraph('Diretora',styleAss))
     elements.append(Paragraph('RG:11.111.111',styleAss))
 
-
-
     doc.build(elements)
-    
     
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename={contexto["pessoa"].nome}_{contexto["ano"]}.pdf'
@@ -697,8 +688,6 @@ def pdf(request, pessoa_id, ano):
 
     return response
    
-    
-
 import io
 from django.http import FileResponse
 from reportlab.pdfgen import canvas

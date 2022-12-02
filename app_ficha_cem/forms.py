@@ -35,7 +35,7 @@ class formularioPessoa(forms.ModelForm):
     )
     class Meta:
         model = Pessoas
-        fields = ['id','nome','dt_nasc','cpf','admissao','efetivo']
+        fields = ['id','nome','dt_nasc','cpf','admissao','efetivo','cargo']
 
 # formulário tipo de faltas
 class formularioTF(forms.ModelForm):

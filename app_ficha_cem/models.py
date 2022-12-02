@@ -30,7 +30,7 @@ class Pessoas(models.Model):
     cpf = models.CharField(max_length=11, default='11111111111')
     admissao = models.DateField(default='1991-01-01')
     efetivo = models.BooleanField(choices=EFETIVO, default=False)
-    cargo = models.ForeignKey(Cargos, on_delete=models.CASCADE, default=1)
+    cargo = models.ForeignKey(Cargos, on_delete=models.CASCADE, related_name="pessoas_cargos")
 
 class Faltas_Pessoas(models.Model):
     
