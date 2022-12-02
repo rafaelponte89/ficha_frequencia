@@ -342,13 +342,24 @@ def buscar_informacoes_ficha(pessoa_id, ano):
     dia_adm= pessoa.admissao.day
     mes_adm = pessoa.admissao.month
     ano_adm = pessoa.admissao.year
-    cargo_disciplina = tuple(str(pessoa.cargo).split('-'))
+
+    conta = 0
+    for l in str(pessoa.cargo):
+        if l == '-':
+            conta +=1
+
+    if conta > 1:
+        cargo_disciplina = str(pessoa.cargo).replace('-','')
+        cargo_disciplina = cargo_disciplina + ' - N/A'
+        cargo_disciplina = tuple(cargo_disciplina.split('-'))
+    elif conta == 0:
+        cargo_disciplina = str(pessoa.cargo) + ' - N/A'
+        cargo_disciplina = tuple(cargo_disciplina.split('-'))
+    else:
+        cargo_disciplina = tuple(str(pessoa.cargo).split('-'))
+
     cargo, disciplina = cargo_disciplina
-    
-    print(cargo, disciplina)
-    # cargo = 
-    # disciplina = 
-   
+ 
     tipo_faltas=contar_tipos_faltas(faltas)
     print(tipo_faltas)
     data = ''
