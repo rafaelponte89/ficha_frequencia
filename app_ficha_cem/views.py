@@ -147,9 +147,27 @@ def configurar_meses_v2(ano, pessoa_id):
     
     return meses
 
+def gerar_lancamento_em_memoria(data_lanc,qtd_dias):
+    anos = {}
+    data = data_lanc
+
+    for dia in range(0,qtd_dias):
+        
+        if data.year not in anos.keys():
+            anos[data.year] = [data]
+        
+        else:
+            anos[data.year].append(data)
+        
+        data += timedelta(days=1)
+    
+    return anos
+
+
 # faz a pesquisa e incremento para verificar se existe falta lançada naquela data, impedindo lançamento em data
 # que já exista falta computada
 def lancar_falta(data_lanc, pessoa_id):
+
     q1 = Faltas_Pessoas.objects.filter(data__year=data_lanc.year)
     q2 = Faltas_Pessoas.objects.filter(pessoa_id=pessoa_id)
     faltas_pessoa = q1.intersection(q2)
@@ -160,6 +178,7 @@ def lancar_falta(data_lanc, pessoa_id):
             data += timedelta(days=1)
             data = datetime(data.year, data.month, data.day)
             datas.append(data)
+    
     
     data_lanc = datetime(data_lanc.year, data_lanc.month, data_lanc.day)
 
@@ -174,17 +193,39 @@ def lancar_falta(data_lanc, pessoa_id):
 def pessoas_faltas(request, pessoa_id):
 
     pessoa = Pessoas.objects.get(pk=pessoa_id)
+   
     admissao = pessoa.admissao
     data_lancamento = 0
 
     if request.method == 'POST':
+        # instância do formulário para pegar dados
         form = formularioLF(request.POST)
+    
+        # pegar valores do formulário
+        qtd_dias = int(form.data['qtd_dias'])
         data_lancamento = form['data'].value()
+        falta = Faltas.objects.get(pk=form['falta'].value())
+
         data_lancamento = datetime.strptime(data_lancamento, '%Y-%m-%d').date()
-      
+
+        # criar intervalos de lançamentos na memória e dividir por ano (ano é chave)
+        dia_mes_ano = gerar_lancamento_em_memoria(data_lancamento,qtd_dias)
+       
+        # verifica se os dados preenchidos são válidos
+        # verifica se existe faltas naquele intervalo
         if form.is_valid() and data_lancamento > admissao and lancar_falta(data_lancamento, pessoa_id):
+            
+            # navega entre as chaves (ano)
+            for k in dia_mes_ano.keys():
+                qtd_dias = len(dia_mes_ano[k]) # quantos dias existem dentro da chave ano
+                data_lancamento = dia_mes_ano[k][0] # pega o primeiro dia do ano
+
+                # cria objeto com os novos dados
+                novoObj = Faltas_Pessoas(pessoa=pessoa,data=data_lancamento,qtd_dias=qtd_dias,falta=falta)
+                
+                # salva o objeto
+                novoObj.save()
         
-            form.save()
             messages.success(request,"Falta registrada!")
             return redirect('lancarfalta',pessoa_id)
         else:
@@ -358,7 +399,7 @@ def buscar_informacoes_ficha(pessoa_id, ano):
     else:
         cargo_disciplina = tuple(str(pessoa.cargo).split('-'))
 
-    cargo, disciplina = cargo_disciplina
+    des_cargo, disciplina = cargo_disciplina
  
     tipo_faltas=contar_tipos_faltas(faltas)
     print(tipo_faltas)
@@ -416,6 +457,7 @@ def buscar_informacoes_ficha(pessoa_id, ano):
         'ano': ano,
         'funcao': funcao,
         'cargo': cargo,
+        'des_cargo':des_cargo,
         'disciplina': disciplina,
         'ue': ue,
         'funcao_a': funcao_a,
@@ -677,7 +719,7 @@ def pdf(request, pessoa_id, ano):
     
     data_pessoa = [
         [Paragraph(f"<strong>Nome: </strong>{contexto['pessoa'].nome}"),Paragraph(f"<strong>Matrícula: </strong>{contexto['pessoa'].id}"),
-        Paragraph(f"<strong>Cargo: </strong>{contexto['cargo']}"), Paragraph(f"<strong>Disciplina: </strong>{contexto['disciplina']}")],
+        Paragraph(f"<strong>Cargo: </strong>{contexto['des_cargo']}"), Paragraph(f"<strong>Disciplina: </strong>{contexto['disciplina']}")],
         [Paragraph(f"<strong>CPF: </strong>{contexto['pessoa'].cpf}"),Paragraph(f"<strong>Data de Admissão: </strong>{contexto['pessoa'].admissao}"),
         Paragraph(f"<strong>Efetivo: </strong>{contexto['pessoa'].efetivo}")]
     ]
@@ -699,9 +741,9 @@ def pdf(request, pessoa_id, ano):
     elements.append(Paragraph('Diretora',styleAss))
 
     doc.build(elements)
-    
+    nome_arquivo = str(contexto["pessoa"].nome).replace(' ','_') + datetime.strftime(datetime.now(),'_%d/%m/%Y_%H_%M_%S')
     response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename={contexto["pessoa"].nome}_{contexto["ano"]}.pdf'
+    response['Content-Disposition'] = f'attachment; filename={nome_arquivo}.pdf'
     response.write(buffer.getvalue())
     buffer.close()
 
@@ -730,3 +772,4 @@ def imprimir(request, pessoa_id, ano):
     
    
     return FileResponse(buffer, as_attachment=True, filename='teste.pdf')
+
