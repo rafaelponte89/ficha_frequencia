@@ -13,7 +13,7 @@
 <table class="table table-hover">
     <thead>
         <tr>
-            <th scope="col">Ficha Cem </th>
+            <th scope="col">Ficha Frequência </th>
             <th scope="col">Operação</th>
             <th scope="col">Nome</th>
        
@@ -25,8 +25,10 @@
         
         {% for pessoa in pessoas %}
         <tr>
-            <td><a href="{% url 'listarficha' pessoa.id %}">Visualizar</a></td>
-            <td><a href="{% url 'lancarfalta' pessoa.id %}">Lançar Falta</a></td>
+            <td><a class='btn btn-info' href="{% url 'listarficha' pessoa.id %}">Visualizar</a></td>
+            <td><a class='btn btn-info' href="{% url 'lancarfalta' pessoa.id %}">Lançar Falta</a>
+                <a class='btn btn-info' href="{% url 'lancarpontuacao' pessoa.id %}">Lançar Pontuação</a>
+            </td>
             
             <td><a href="{% url 'atualizarpessoa' pessoa.id %}">{{pessoa.nome}}</a></td>
         </tr>

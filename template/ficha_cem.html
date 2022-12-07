@@ -6,16 +6,22 @@
 {% block content %}
 <div class="container">
     <div class="row">
+        <div class="col-2">
+            <a class="btn btn-info mt-2 mb-2" href="{% url 'baixarpdf' contexto.pessoa.id contexto.ano %}">Baixar</a>
+        </div>
+    </div>
+    <div class="row">
+        
         <div class="col-1">
             <img src="{% static 'app_ficha_cem/brasao_orlandia.png' %}" width="50" />
         </div>
         <div class="col-10">
-            EMEB CORONEL FRANCISCO ORLANDO
+           NOME DA ESCOLA
         </div>
     </div>
     <div class="row">
         <div class="col-12 text-left">
-            <h1>Ficha Cem {{contexto.ano}} - ON</h1>
+            <h1>Ficha Frequência {{contexto.ano}} - ON</h1>
         </div>
         <div class="col-2">
             <strong>Nome: </strong><label>{{contexto.nome}}</label>

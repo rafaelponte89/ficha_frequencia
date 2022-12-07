@@ -1,5 +1,5 @@
 from django import forms
-from .models import Pessoas, Faltas, Faltas_Pessoas, Cargos
+from .models import Pessoas, Faltas, Faltas_Pessoas, Cargos, Pontuacoes
 from django.forms.widgets import SelectDateWidget, RadioSelect
 from django.utils.timezone import now
 from .models import Pessoas
@@ -66,3 +66,18 @@ class formularioLF(forms.ModelForm):
     class Meta:
         model = Faltas_Pessoas
         fields = ['data','falta','pessoa','qtd_dias']
+
+class formularioPontuacao(forms.ModelForm):
+    ano = forms.CharField(max_length=5)
+    cargo = forms.CharField(max_length=5)
+    funcao = forms.CharField(max_length=5)
+    ue = forms.CharField(max_length=5)
+    pessoa = forms.ModelChoiceField(queryset=Pessoas.objects.all(),
+                                      widget=forms.HiddenInput())
+
+    class Meta:
+        model = Pontuacoes
+        fields = ['ano','cargo','funcao','ue','pessoa']
+
+class formularioAtribuicao(forms.ModelForm):
+    pass

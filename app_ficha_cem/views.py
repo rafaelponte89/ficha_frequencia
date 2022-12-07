@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from .models import Faltas, Pessoas, Faltas_Pessoas, Pontuacoes, PontuacoesAtribuicoes, Cargos
-from .forms import formularioPessoa, formularioTF, formularioLF, formularioCargo
+from .forms import formularioPessoa, formularioTF, formularioLF, formularioCargo, formularioPontuacao
 from django.views import View
 from django.contrib import messages
 # Create your views here.
@@ -218,7 +218,7 @@ def pessoas_faltas(request, pessoa_id):
             # navega entre as chaves (ano)
             for k in dia_mes_ano.keys():
                 qtd_dias = len(dia_mes_ano[k]) # quantos dias existem dentro da chave ano
-                data_lancamento = dia_mes_ano[k][0] # pega o primeiro dia do ano
+                data_lancamento = dia_mes_ano[k][0] # pega o primeiro dia do lançamento e depois o primeiro dia do ano
 
                 # cria objeto com os novos dados
                 novoObj = Faltas_Pessoas(pessoa=pessoa,data=data_lancamento,qtd_dias=qtd_dias,falta=falta)
@@ -773,3 +773,25 @@ def imprimir(request, pessoa_id, ano):
    
     return FileResponse(buffer, as_attachment=True, filename='teste.pdf')
 
+def lancar_pontuacoes(request, pessoa_id):
+
+    pessoa = Pessoas.objects.get(pk=pessoa_id)
+    
+    if request.method == 'POST':
+        form = formularioPontuacao(request.POST)
+        
+        if form.is_valid():
+            print(form)
+            form.save()
+            messages.success(request,"Pontuação Gravada!")
+            return redirect('lancarpontuacao',pessoa_id)
+        else:
+            messages.error(request,"Erro ao  Gravar Pontuação!",'danger')
+            
+
+    else:
+        form = formularioPontuacao(initial={'pessoa':pessoa})
+        
+    print(form)
+    
+    return render(request,'template/lancar_pontuacao.html',{'form':form,'pessoa':pessoa})

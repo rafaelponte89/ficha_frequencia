@@ -23,7 +23,7 @@
 
             </td>
             <td>
-                <a href="{% url 'imprimir' pessoa.id ano %}">{{pessoa.nome}}_{{ano}}.pdf</a>
+                <a href="{% url 'baixarpdf' pessoa.id ano %}">{{pessoa.nome}}_{{ano}}.pdf</a>
             </td>
         </tr>
         {% endfor %}
