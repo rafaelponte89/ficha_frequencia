@@ -32,11 +32,15 @@
                     </td>
                     <td>
                         <a class='btn btn-info'
-                            href="{% url 'atualizarpontuacao' pessoa.id pontuacao.id %}">Atualizar</a>
+                            href="{% url 'atualizarpontuacao' pessoa.id pontuacao.id %}"><span class="material-icons">
+                                autorenew
+                                </span></a>
                     </td>
                     <td>
                         <a class='btn btn-danger'
-                            href="{% url 'excluirpontuacao' pessoa.id pontuacao.id %}">Excluir</a>
+                            href="{% url 'excluirpontuacao' pessoa.id pontuacao.id %}"><span class="material-icons">
+                                delete
+                                </span></a>
                     </td>
                 </tr>
                 {% endfor %}

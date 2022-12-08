@@ -14,8 +14,8 @@
     <thead>
         <tr>
             <th scope="col">Ficha Frequência </th>
-            <th scope="col">Falta</th>
-            <th scope="col">Pontuação</th>
+            <th scope="col">Lançar Falta</th>
+            <th scope="col">Lançar Pontuação</th>
             <th scope="col">Atualização</th>
             <th scope="col">Nome</th>
 
@@ -27,10 +27,18 @@
 
         {% for pessoa in pessoas %}
         <tr>
-            <td><a class='btn btn-info' href="{% url 'listarficha' pessoa.id %}">Visualizar</a></td>
-            <td><a class='btn btn-info' href="{% url 'lancarfalta' pessoa.id %}">Lançar Falta</a> </td>
-            <td> <a class='btn btn-info' href="{% url 'lancarpontuacao' pessoa.id %}">Lançar Pontuação</a></td>
-            <td><a class='btn btn-info' href="{% url 'atualizarpessoa' pessoa.id %}">Atualizar</a></td>
+            <td><a class='btn btn-info' href="{% url 'listarficha' pessoa.id %}"><span class="material-icons">
+                visibility
+                </span></a></td>
+            <td><a class='btn btn-info' href="{% url 'lancarfalta' pessoa.id %}"><span class="material-icons">
+                add
+                </span></a> </td>
+            <td> <a class='btn btn-info' href="{% url 'lancarpontuacao' pessoa.id %}"><span class="material-icons">
+                add
+                </span></a></td>
+            <td><a class='btn btn-info' href="{% url 'atualizarpessoa' pessoa.id %}"><span class="material-icons">
+                autorenew
+                </span></a></a></td>
 
             <td>{{pessoa.nome}}</td>
         </tr>
