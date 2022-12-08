@@ -193,10 +193,12 @@ def lancar_falta(data_lanc, pessoa_id):
 def pessoas_faltas(request, pessoa_id):
 
     pessoa = Pessoas.objects.get(pk=pessoa_id)
-   
+    pessoa_falta = Faltas_Pessoas.objects.filter(pessoa=pessoa).order_by('data')[:30]
     admissao = pessoa.admissao
     data_lancamento = 0
-
+   
+   
+    
     if request.method == 'POST':
         # instância do formulário para pegar dados
         form = formularioLF(request.POST)
@@ -232,7 +234,7 @@ def pessoas_faltas(request, pessoa_id):
             messages.error(request,"Não foi possível registrar a falta!",'danger')
     else:
         form = formularioLF(initial={'pessoa':pessoa})
-    return render(request,'template/lancar_falta.html', {'form':form, 'pessoa':pessoa})
+    return render(request,'template/lancar_falta.html', {'form':form, 'pessoa':pessoa, 'faltas':pessoa_falta})
 
 # atualiza informações de uma pessoa
 def atualizar_pessoa(request, pessoa_id):

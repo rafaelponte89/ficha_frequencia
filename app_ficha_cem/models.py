@@ -35,7 +35,7 @@ class Pessoas(models.Model):
 class Faltas_Pessoas(models.Model):
     
     pessoa = models.ForeignKey(Pessoas, on_delete=models.CASCADE)
-    data = models.DateField(default=now )
+    data = models.DateField(default=now)
     falta = models.ForeignKey(Faltas, on_delete=models.CASCADE)
     qtd_dias = models.IntegerField(default=1)
 
