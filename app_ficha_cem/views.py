@@ -773,9 +773,49 @@ def imprimir(request, pessoa_id, ano):
    
     return FileResponse(buffer, as_attachment=True, filename='teste.pdf')
 
+
+def atualizar_pontuacoes(request, pontuacao_id, pessoa_id):
+
+    pontuacao = Pontuacoes.objects.get(pk=pontuacao_id)
+    pontuacoes = Pontuacoes.objects.all().filter(pessoa=pessoa_id)
+    pessoa = Pessoas.objects.get(pk=pessoa_id)
+
+    if request.method == 'POST':
+        form = formularioPontuacao(request.POST, instance=pontuacao)
+        
+        if form.is_valid():
+            print(form)
+            form.save()
+            
+            messages.success(request,"Pontuação Gravada!")
+            return redirect('lancarpontuacao',pessoa_id)
+        else:
+            messages.error(request,"Erro ao  Gravar Pontuação!",'danger')
+            
+
+    else:
+        form = formularioPontuacao(instance=pontuacao,initial={'pessoa':pessoa})
+    
+    return render(request,'template/lancar_pontuacao.html',{'form':form,'pessoa':pessoa,'pontuacoes':pontuacoes})
+
+def excluir_pontuacoes(request, pessoa_id, pontuacao_id):
+    pontuacao = Pontuacoes.objects.get(pk=pontuacao_id)
+    pontuacoes = Pontuacoes.objects.all().filter(pessoa=pessoa_id)
+    pessoa = Pessoas.objects.get(pk=pessoa_id)
+
+    if request.method == 'GET':
+        pontuacao.delete()    
+        messages.success(request,"Pontuação Apagada!")
+        return redirect('lancarpontuacao',pessoa_id)     
+    else:
+        form = formularioPontuacao(initial={'pessoa':pessoa})
+    
+    return render(request,'template/lancar_pontuacao.html',{'form':form,'pessoa':pessoa,'pontuacoes':pontuacoes})
+
 def lancar_pontuacoes(request, pessoa_id):
 
     pessoa = Pessoas.objects.get(pk=pessoa_id)
+    pontuacoes = Pontuacoes.objects.all().filter(pessoa=pessoa_id)
     
     if request.method == 'POST':
         form = formularioPontuacao(request.POST)
@@ -794,4 +834,4 @@ def lancar_pontuacoes(request, pessoa_id):
         
     print(form)
     
-    return render(request,'template/lancar_pontuacao.html',{'form':form,'pessoa':pessoa})
+    return render(request,'template/lancar_pontuacao.html',{'form':form,'pessoa':pessoa,'pontuacoes':pontuacoes})

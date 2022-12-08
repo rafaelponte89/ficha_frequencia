@@ -57,6 +57,9 @@ class Pontuacoes(models.Model):
     class Meta:
         unique_together = ('ano','pessoa')
 
+    def __str__(self):
+        return self.ano
+
 class PontuacoesAtribuicoes(models.Model):
 
     ano = models.CharField(max_length=5)
