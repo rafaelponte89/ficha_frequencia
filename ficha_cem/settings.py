@@ -40,7 +40,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'crispy_forms',
-    'app_ficha_cem'
+    'app_ficha_cem',
+    'app_cargo',
+    'app_falta',
+    'app_pessoa'
 ]
 
 MIDDLEWARE = [
@@ -58,7 +61,7 @@ ROOT_URLCONF = 'ficha_cem.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [path.join((BASE_DIR))],
+        'DIRS': [path.join((BASE_DIR)),path.join('app_cargo/template'), path.join('app_falta/template'), path.join('app_pessoa/template')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

@@ -1,8 +1,10 @@
 from django.shortcuts import render, redirect
-from .models import Faltas, Pessoas, Faltas_Pessoas, Pontuacoes, PontuacoesAtribuicoes, Cargos
-from .forms import formularioPessoa, formularioTF, formularioLF, formularioCargo, formularioPontuacao
+from .models import Faltas, Faltas_Pessoas, Pontuacoes, PontuacoesAtribuicoes
+from .forms import formularioLF, formularioPontuacao
 from django.views import View
 from django.contrib import messages
+from app_pessoa.models import Pessoas
+
 # Create your views here.
 
 from io import BytesIO
@@ -144,7 +146,7 @@ def configurar_meses_v2(ano, pessoa_id):
             for m, dias in meses.items():
                 for dia in range(len(dias)):
                     meses[m][dia] = 'C'
-    
+    print(meses)
     return meses
 
 def gerar_lancamento_em_memoria(data_lanc,qtd_dias):
@@ -166,28 +168,38 @@ def gerar_lancamento_em_memoria(data_lanc,qtd_dias):
 
 # faz a pesquisa e incremento para verificar se existe falta lançada naquela data, impedindo lançamento em data
 # que já exista falta computada
-def lancar_falta(data_lanc, pessoa_id):
-
+def lancar_falta(data_lanc, qtd_dias, pessoa_id):
+   
     q1 = Faltas_Pessoas.objects.filter(data__year=data_lanc.year)
     q2 = Faltas_Pessoas.objects.filter(pessoa_id=pessoa_id)
     faltas_pessoa = q1.intersection(q2)
     datas = []
     for fp in faltas_pessoa:
         data = fp.data
-        for dias in range(1,fp.qtd_dias):
-            data += timedelta(days=1)
+        for dias in range(0,fp.qtd_dias):
             data = datetime(data.year, data.month, data.day)
             datas.append(data)
-    
-    
+            data += timedelta(days=1)
+            
     data_lanc = datetime(data_lanc.year, data_lanc.month, data_lanc.day)
+    datas_lanc = []
 
-    # se a data de lancamento já existe, falso para lançamento
-    if data_lanc in datas:
+    for dias in range(0,qtd_dias):
+        datas_lanc.append(data_lanc)
+        data_lanc += timedelta(days=1)
+
+
+    conflito = False
+    for lancamento in datas_lanc:
+        if lancamento in datas:
+            conflito = True
+            break
+        
+    if conflito:
         return False
-    # se a data de lancamento não existe liberado
     else:
         return True
+        
 
 # fazer o lançamento de faltas para determinada pessoa
 def pessoas_faltas(request, pessoa_id):
@@ -197,8 +209,6 @@ def pessoas_faltas(request, pessoa_id):
     admissao = pessoa.admissao
     data_lancamento = 0
    
-   
-    
     if request.method == 'POST':
         # instância do formulário para pegar dados
         form = formularioLF(request.POST)
@@ -215,7 +225,7 @@ def pessoas_faltas(request, pessoa_id):
        
         # verifica se os dados preenchidos são válidos
         # verifica se existe faltas naquele intervalo
-        if form.is_valid() and data_lancamento > admissao and lancar_falta(data_lancamento, pessoa_id):
+        if form.is_valid() and data_lancamento > admissao and lancar_falta(data_lancamento, qtd_dias ,pessoa_id):
             
             # navega entre as chaves (ano)
             for k in dia_mes_ano.keys():
@@ -231,41 +241,11 @@ def pessoas_faltas(request, pessoa_id):
             messages.success(request,"Falta registrada!")
             return redirect('lancarfalta',pessoa_id)
         else:
-            messages.error(request,"Não foi possível registrar a falta!",'danger')
+            messages.error(request,"Não foi possível registrar a falta! Pode existir conflito de datas!",'danger')
     else:
         form = formularioLF(initial={'pessoa':pessoa})
     return render(request,'template/lancar_falta.html', {'form':form, 'pessoa':pessoa, 'faltas':pessoa_falta})
 
-# atualiza informações de uma pessoa
-def atualizar_pessoa(request, pessoa_id):
-    pessoa = Pessoas.objects.get(pk=pessoa_id)
-   
-    if request.method == 'POST':
-        form = formularioPessoa(request.POST, instance=pessoa)
-        if form.is_valid():
-            form.save()
-            messages.success(request,"Pessoa atualizada!")
-            return redirect('listarpessoas')
-    else:
-        form = formularioPessoa(instance=pessoa)
-    return render(request,'template/cadastrar_pessoa.html',{'form':form,'pessoa':pessoa})
-
-# listar e incluir pessoas
-def pessoas(request):
-    pessoas = Pessoas.objects.all()
-    
-    
-    if request.method == 'POST':
-        form = formularioPessoa(request.POST)
-    
-        if form.is_valid():
-            form.save()
-            messages.success(request,"Pessoa registrada!")
-            return redirect('listarpessoas')
-    else:
-
-        form = formularioPessoa()
-    return render(request,'template/cadastrar_pessoa.html',{'form':form, 'pessoas':pessoas})
 
 # listar anos de uma determinada pessoa
 def listar_anos(pessoa_id):
@@ -347,28 +327,42 @@ def contar_tipos_faltas(faltas):
 
     return tipo_faltas
 
-def cargos(request):
-    cargos = Cargos.objects.all()
-    if request.method == 'POST':
-        form = formularioCargo(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('listarcargos')
-    else:
-        form = formularioCargo()
-    return render(request,'template/cadastrar_cargo.html',{'form':form, 'cargos':cargos})
 
-# listar e incluir faltas
-def faltas(request):
-    faltas = Faltas.objects.all()
-    if request.method == 'POST':
-        form = formularioTF(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('listarfaltas')
-    else:
-        form = formularioTF()
-    return render(request,'template/cadastrar_tipo_falta.html',{'form':form, 'faltas':faltas})
+def faltas_por_mes_v2(meses):
+    '''Guarda dados de comparecimento e todos os tipos de faltas que ocorreram e suas quantidades, torna uniforme a todos os meses'''
+    faltas_por_mes = {}
+    faltas_por_mes_n = {}
+
+    for k,v in meses.items():
+        for i in v:
+            if i != ' ':
+                faltas_por_mes_n[i] = 0
+        
+    for k,v in meses.items():
+        if k not in faltas_por_mes:
+            faltas_por_mes[k] = faltas_por_mes_n.copy()
+        for i in v:
+            if i != ' ':
+                faltas_por_mes[k][i] += 1
+               
+    return faltas_por_mes
+    
+
+def faltas_por_mes(meses):
+    '''Guarda as faltas referentes somente aos meses em que elas aparecem, não guarda armazenamentos'''
+    faltas_por_mes = {}
+    for k,v in meses.items():
+        if k not in faltas_por_mes:
+            faltas_por_mes[k] = {}
+       
+        for i in v:
+            if i != 'C' and i != ' ':
+             
+                if i not in faltas_por_mes[k]:
+                    faltas_por_mes[k][i] = 1
+                else:
+                    faltas_por_mes[k][i] += 1
+    return faltas_por_mes
 
 def buscar_informacoes_ficha(pessoa_id, ano):
     anos, pessoa = listar_anos(pessoa_id)
@@ -406,6 +400,7 @@ def buscar_informacoes_ficha(pessoa_id, ano):
     tipo_faltas=contar_tipos_faltas(faltas)
     print(tipo_faltas)
     data = ''
+
     for falta in faltas:
        
         data = falta.data
@@ -446,9 +441,22 @@ def buscar_informacoes_ficha(pessoa_id, ano):
             elif mes == 12:
                 meses['dezembro'][dia] = falta.falta.tipo
 
+
+    faltas_mes_a_mes = faltas_por_mes_v2(meses)
+
+    # print('inicio')
+    # linha = 0
+    # minha_lista = []
+    # for k in faltas_mes_a_mes:
+    #     linha +=1
+    #     minha_lista.append(list(faltas_mes_a_mes[k].values()))
+    # print(linha,minha_lista)
+    # print('fim')
+            
+    
     pessoa.cpf = f'{pessoa.cpf[:3]}.{pessoa.cpf[3:6]}.{pessoa.cpf[6:9]}-{pessoa.cpf[-2:]}'
     pessoa.admissao = f'{dia_adm}/{mes_adm}/{ano_adm}'
-    print(pessoa.efetivo)
+    
     if pessoa.efetivo:
         pessoa.efetivo='Sim'
     else:
@@ -456,6 +464,7 @@ def buscar_informacoes_ficha(pessoa_id, ano):
 
     contexto = {
         'meses': meses,
+        'falta_por_mes': faltas_mes_a_mes,
         'ano': ano,
         'funcao': funcao,
         'cargo': cargo,
@@ -624,7 +633,7 @@ def gerar_pontuacao_anual(ano,pessoa, tipo='c'):
 
 #em desenvolvimento parte de geração de pdf ficha cem
 def pdf(request, pessoa_id, ano):
-
+    import io
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import A4, landscape
     from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Image
@@ -636,16 +645,19 @@ def pdf(request, pessoa_id, ano):
    
     elements = []
 
+    # cria informações para a primeira linha da tabela
     mes_dias = ["Mês/Dia"]
     for i in range(1,32):
         mes_dias.append(i)
-
     mes_dias.append('Tempos')
 
+    # insere a chave dentro da lista dos meses na posição 0. Ex ['janeiro','C','C'...]
     for k,v in contexto['meses'].items():
         v.insert(0,k)
 
     print(len(contexto['meses']['fevereiro']))
+
+    # insere informações do contexto referentes a cada mês naquela linha
     contexto['meses']['janeiro'].append('Tempos')
     if len(contexto['meses']['fevereiro']) == 29:
        
@@ -661,15 +673,21 @@ def pdf(request, pessoa_id, ano):
     
     contexto['meses']['agosto'].extend([contexto['funcao'], contexto['cargo'], contexto['ue']])
 
+    # insere no dicionario faltas na posição 0 a sigla da falta Ex 'contexto['FJ']'=['FJ','FALTA JUSTIFICADA',10]
     for k,v in contexto['tp_faltas'].items():
         v.insert(0,k)
-
+    
+    # cria lista com os valores não a chave
     data_tp_falta = [tp for tp in contexto['tp_faltas'].values()]
     
-    data_faltas = [m for m in contexto['meses'].values()]
+    # cria lista com os valores dos meses 
+    data_frequencia = [m for m in contexto['meses'].values()]
 
-    data_faltas.insert(0, mes_dias)
+    # dentro dessa lista insere a lista mes_dias
+    data_frequencia.insert(0, mes_dias)
 
+
+    # cria estilo 
     style_table_corpo = TableStyle([('GRID',(0,0),(-1,-1), 0.5, colors.black),
                             ('LEFTPADDING',(0,0),(-1,-1),2),
                             ('TOPPADDING',(0,0),(-1,-1),2),
@@ -684,16 +702,17 @@ def pdf(request, pessoa_id, ano):
                             ('SPAN',(32,9),(34,12)),             
                             ])
 
-    t_faltas = Table(data_faltas, hAlign='LEFT')
+    # cria tabela com as informações de data_faltas
+    t_frequencia = Table(data_frequencia, hAlign='LEFT')
    
-    # aplica estilo diferente conforme a condição, ou seja, as falas ficam com cor de background
-    for row, values in enumerate(data_faltas):
+    # aplica estilo diferente conforme a condição, ou seja, as faltas ficam com cor de background
+    for row, values in enumerate(data_frequencia):
        for column, value in enumerate(values):
         #    print(column, value)
            if value in contexto['tp_faltas']:
                style_table_corpo.add('BACKGROUND',(column,row),(column,row),colors.lightblue)
 
-    t_faltas.setStyle(style_table_corpo)
+    t_frequencia.setStyle(style_table_corpo)
 
     t_tipos = Table(data_tp_falta, style=[('GRID',(0,0),(-1,-1), 0.5, colors.black),
                             ('ALIGN',(0,0),(-1,-1),'CENTER'),
@@ -716,7 +735,7 @@ def pdf(request, pessoa_id, ano):
                     ) 
    
     # elements.append(Paragraph('<para><img src="https://www.orlandia.sp.gov.br/novo/wp-content/uploads/2017/01/brasaoorlandia.png" width="40" height="40"/> </para>'))
-    elements.append(Paragraph(f"<strong>Ficha Cem - Ano</strong>:{contexto['ano']}", styleH))
+    elements.append(Paragraph(f"<strong>Ficha Frequência - Ano</strong>:{contexto['ano']}", styleH))
     # elements.append(Paragraph(f"<strong>Nome</strong>: {contexto['pessoa'].nome}  RM: {contexto['pessoa'].id}", styleB))
     
     data_pessoa = [
@@ -732,7 +751,7 @@ def pdf(request, pessoa_id, ano):
     
     #Send the data and build the file
     elements.append(tb_pessoa)
-    elements.append(t_faltas)
+    elements.append(t_frequencia)
 
     elements.append(Paragraph(f"", styleB))
     elements.append(t_tipos)
@@ -750,31 +769,193 @@ def pdf(request, pessoa_id, ano):
     buffer.close()
 
     return response
-   
-import io
-from django.http import FileResponse
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import landscape, A4
-from reportlab.lib.units import cm, inch
-from reportlab.lib import colors
-def imprimir(request, pessoa_id, ano):
+
+def pdf_v2(request, pessoa_id, ano):
+    import io
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import A4, landscape
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Image
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    contexto = buscar_informacoes_ficha(pessoa_id,ano)
    
     buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(A4), rightMargin=30,leftMargin=30, topMargin=30,bottomMargin=18)
+   
+    elements = []
 
-    p = canvas.Canvas(buffer,landscape(A4))
-    p.setStrokeColor(colors.black)
-    for m in range(1,13):
-        for d in range(1,32):
-            p.grid([d*cm, d*cm, d*cm],[d/2*cm, d/3*cm, d/4*cm])
+    # cria informações para a primeira linha da tabela
+    mes_dias = ["Mês/Dia"]
+    for i in range(1,32):
+        mes_dias.append(i)
+    # mes_dias.append('Tempos')
 
-    p.grid([4*cm, 6*cm, 8*cm],[2*cm, 3*cm, 4*cm])
-    p.showPage()
-    p.save()
-    buffer.seek(0)
+    # insere a chave dentro da lista dos meses na posição 0. Ex ['janeiro','C','C'...]
+    for k,v in contexto['meses'].items():
+        v.insert(0,k)
+
+
+    # #insere informações do contexto referentes a cada mês naquela linha
+    # contexto['meses']['janeiro'].append('Tempos')
+    # if len(contexto['meses']['fevereiro']) == 29:
+    #     contexto['meses']['fevereiro'].extend(['','','','Função','Cargo','UE'])
+    # else:
+    #     contexto['meses']['fevereiro'].extend(['','','Função','Cargo','UE'])
+    # contexto['meses']['marco'].extend(['Atribuição'])
+    # contexto['meses']['abril'].extend(['',contexto['funcao_at'], contexto['cargo_at'], contexto['ue_at']])
+    # contexto['meses']['maio'].extend(['Anterior'])
+   
+    # contexto['meses']['junho'].extend(['',contexto['funcao_a'], contexto['cargo_a'], contexto['ue_a']])
+    # contexto['meses']['julho'].extend(['Atual'])
+    
+    # contexto['meses']['agosto'].extend([contexto['funcao'], contexto['cargo'], contexto['ue']])
+
+    # insere no dicionario faltas na posição 0 a sigla da falta Ex 'contexto['FJ']'=['FJ','FALTA JUSTIFICADA',10]
+    for k,v in contexto['tp_faltas'].items():
+        v.insert(0,k)
+
+   
+    # cria lista com os valores não a chave
+    data_tp_falta = [tp for tp in contexto['tp_faltas'].values()]
+    
+    # cria lista com os valores dos meses 
+    data_frequencia = [m for m in contexto['meses'].values()]
+
+    # dentro dessa lista insere a lista mes_dias
+    data_frequencia.insert(0, mes_dias)
+
+    faltas_mes_a_mes = contexto['falta_por_mes']
+    linha = 0
+    eventos_por_mes = []
+    intermediaria = []
+    
+    for k in faltas_mes_a_mes:
+        linha +=1
+        if k in ['janeiro','marco','maio','julho','agosto','outubro','dezembro']:
+            eventos_por_mes.append(list(faltas_mes_a_mes[k].values()))
+        elif k in ['abril','junho','setembro','novembro']:
+            intermediaria = list(faltas_mes_a_mes[k].values())
+            intermediaria.insert(0,' ')
+            eventos_por_mes.append(intermediaria)
+        else:
+            intermediaria = list(faltas_mes_a_mes[k].values())
+            if bissexto(ano):
+                for i in range(2):
+                    intermediaria.insert(0,' ')
+            else:
+                for i in range(3):
+                    intermediaria.insert(0,' ')
+            eventos_por_mes.append(intermediaria)
+
+    # pega chaves de um mes qualquer que será a linha de eventos
+    eventos_por_mes.insert(0,list(contexto['falta_por_mes']['janeiro'].keys()))
+    
+    # extend a tabela frequencia com informação dos eventos
+    for i in range(0,len(data_frequencia)):
+        data_frequencia[i].extend(eventos_por_mes[i])
+
+    data_frequencia[0].extend(['Tempos'])
+    data_frequencia[3].extend(['Cargo','Função','UE'])
+  
+    data_frequencia[5].extend(['Atribuição'])
+    data_frequencia[6].extend([contexto['cargo_at'], contexto['funcao_at'], contexto['ue_at']])
+    data_frequencia[7].extend(['Anterior'])
+    data_frequencia[8].extend([contexto['cargo_a'], contexto['funcao_a'], contexto['ue_a']])
+    data_frequencia[9].extend(['Atual'])
+    data_frequencia[10].extend([contexto['cargo'], contexto['funcao'], contexto['ue']])
+
+   
+    
+    print(data_frequencia)
+
+    # cria estilo 
+    style_table_corpo = TableStyle([('GRID',(0,0),(-1,-1), 0.5, colors.black),
+                            ('LEFTPADDING',(0,0),(-1,-1),2),
+                            ('TOPPADDING',(0,0),(-1,-1),2),
+                            ('BOTTOMPADDING',(0,0),(-1,-1),2),
+                            ('RIGHTPADDING',(0,0),(-1,-1),2),
+                            ('ALIGN',(0,0),(-1,-1),'CENTER'),
+                            ('FONTSIZE',(0,0), (-1,-1),8.5), 
+                            # ('SPAN',(32,0),(34,1)),
+                            # ('SPAN',(32,3),(34,3)),
+                            # ('SPAN',(32,5),(34,5)),
+                            # ('SPAN',(32,7),(34,7)),
+                            # ('SPAN',(32,9),(34,12)),             
+                            ])
+
+    # cria tabela com as informações de data_faltas
+    t_frequencia = Table(data_frequencia, hAlign='LEFT')
+
+    # t_mes_mes = Table(mes_mes, style=[('GRID',(0,0),(-1,-1), 0.5, colors.black),
+    #                         ('ALIGN',(0,0),(-1,-1),'LEFT'),
+    #                         ('FONTSIZE',(0,0), (-1,-1),8.5),
+    #                         ], hAlign='LEFT')
     
    
-    return FileResponse(buffer, as_attachment=True, filename='teste.pdf')
+    # aplica estilo diferente conforme a condição, ou seja, as faltas ficam com cor de background
+    for row, values in enumerate(data_frequencia):
+       for column, value in enumerate(values):
+        #    print(column, value)
+           if value in contexto['tp_faltas']:
+               style_table_corpo.add('BACKGROUND',(column,row),(column,row),colors.lightblue)
 
+    t_frequencia.setStyle(style_table_corpo)
+
+    t_tipos = Table(data_tp_falta, style=[('GRID',(0,0),(-1,-1), 0.5, colors.black),
+                            ('ALIGN',(0,0),(-1,-1),'CENTER'),
+                            ('FONTSIZE',(0,0), (-1,-1),8.5),
+                            ], hAlign='LEFT')
+
+    styles = getSampleStyleSheet()
+    
+    styleH = ParagraphStyle('Cabeçalho',
+                            fontSize=20,
+                            parent=styles['Heading1'],
+                            alignment=1,
+                            spaceAfter=14)
+    
+    styleB = ParagraphStyle('Corpo',
+                        spaceAfter=14
+                    ) 
+    styleAss = ParagraphStyle('Assinatura',
+                        alignment=1
+                    ) 
+   
+    # elements.append(Paragraph('<para><img src="https://www.orlandia.sp.gov.br/novo/wp-content/uploads/2017/01/brasaoorlandia.png" width="40" height="40"/> </para>'))
+    elements.append(Paragraph(f"<strong>Ficha Frequência - Ano</strong>:{contexto['ano']}", styleH))
+    # elements.append(Paragraph(f"<strong>Nome</strong>: {contexto['pessoa'].nome}  RM: {contexto['pessoa'].id}", styleB))
+    
+    data_pessoa = [
+        [Paragraph(f"<strong>Nome: </strong>{contexto['pessoa'].nome}"),Paragraph(f"<strong>Matrícula: </strong>{contexto['pessoa'].id}"),
+        Paragraph(f"<strong>Cargo: </strong>{contexto['des_cargo']}"), Paragraph(f"<strong>Disciplina: </strong>{contexto['disciplina']}")],
+        [Paragraph(f"<strong>CPF: </strong>{contexto['pessoa'].cpf}"),Paragraph(f"<strong>Data de Admissão: </strong>{contexto['pessoa'].admissao}"),
+        Paragraph(f"<strong>Efetivo: </strong>{contexto['pessoa'].efetivo}")]
+    ]
+
+    tb_pessoa = Table(data_pessoa,style=[('GRID',(0,0),(-1,-1), 0.5, colors.white),
+                                ('ALIGN',(0,0),(-1,-1),'LEFT'),
+                            ('FONTSIZE',(0,0), (-1,-1),8.5),
+                            ],hAlign='LEFT')
+    
+    #Send the data and build the file
+    elements.append(tb_pessoa)
+    elements.append(t_frequencia)
+
+    elements.append(Paragraph(f"", styleB))
+    elements.append(t_tipos)
+
+    elements.append(Paragraph('____________________________', styleAss))
+    elements.append(Paragraph('Nome', styleAss))
+    elements.append(Paragraph('RG:11.111.111',styleAss))
+    elements.append(Paragraph('Diretora',styleAss))
+    # elements.append(t_mes_mes)
+    doc.build(elements)
+    nome_arquivo = str(contexto["pessoa"].nome).replace(' ','_') + datetime.strftime(datetime.now(),'_%d/%m/%Y_%H_%M_%S')
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename={nome_arquivo}.pdf'
+    response.write(buffer.getvalue())
+    buffer.close()
+
+    return response
 
 def atualizar_pontuacoes(request, pontuacao_id, pessoa_id):
 
