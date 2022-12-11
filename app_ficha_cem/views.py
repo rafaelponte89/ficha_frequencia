@@ -755,22 +755,6 @@ def pdf_v2(request, pessoa_id, ano):
     for k,v in contexto['meses'].items():
         v.insert(0,k)
 
-
-    # #insere informações do contexto referentes a cada mês naquela linha
-    # contexto['meses']['janeiro'].append('Tempos')
-    # if len(contexto['meses']['fevereiro']) == 29:
-    #     contexto['meses']['fevereiro'].extend(['','','','Função','Cargo','UE'])
-    # else:
-    #     contexto['meses']['fevereiro'].extend(['','','Função','Cargo','UE'])
-    # contexto['meses']['marco'].extend(['Atribuição'])
-    # contexto['meses']['abril'].extend(['',contexto['funcao_at'], contexto['cargo_at'], contexto['ue_at']])
-    # contexto['meses']['maio'].extend(['Anterior'])
-   
-    # contexto['meses']['junho'].extend(['',contexto['funcao_a'], contexto['cargo_a'], contexto['ue_a']])
-    # contexto['meses']['julho'].extend(['Atual'])
-    
-    # contexto['meses']['agosto'].extend([contexto['funcao'], contexto['cargo'], contexto['ue']])
-
     # insere no dicionario faltas na posição 0 a sigla da falta Ex 'contexto['FJ']'=['FJ','FALTA JUSTIFICADA',10]
     for k,v in contexto['tp_faltas'].items():
         v.insert(0,k)
@@ -837,22 +821,20 @@ def pdf_v2(request, pessoa_id, ano):
                             ('RIGHTPADDING',(0,0),(-1,-1),2),
                             ('ALIGN',(0,0),(-1,-1),'CENTER'),
                             ('FONTSIZE',(0,0), (-1,-1),8.5), 
-                            # ('SPAN',(32,0),(34,1)),
-                            # ('SPAN',(32,3),(34,3)),
-                            # ('SPAN',(32,5),(34,5)),
-                            # ('SPAN',(32,7),(34,7)),
-                            # ('SPAN',(32,9),(34,12)),             
-                            ])
+                            ('SPAN',(-3,-13),(-1,-12)),
+                            ('SPAN',(-3,-8),(-1,-8)),
+                            ('SPAN',(-3,-6),(-1,-6)),
+                            ('SPAN',(-3,-4),(-1,-4)),
+                            ('BOX',(-3,-13),(-1,-1),2,colors.black),
+                            ('BOX',(32,0),(-1,-1),2,colors.black),
+                            ('BACKGROUND',(32,0),(-4,-1),colors.antiquewhite),
+                            ('BOX',(0,0),(32,13),2,colors.black)             
+                            ], spaceBefore=20)
 
     # cria tabela com as informações de data_faltas
-    t_frequencia = Table(data_frequencia, hAlign='LEFT')
+    t_frequencia = Table(data_frequencia, hAlign='CENTER',)
 
-    # t_mes_mes = Table(mes_mes, style=[('GRID',(0,0),(-1,-1), 0.5, colors.black),
-    #                         ('ALIGN',(0,0),(-1,-1),'LEFT'),
-    #                         ('FONTSIZE',(0,0), (-1,-1),8.5),
-    #                         ], hAlign='LEFT')
     
-   
     # aplica estilo diferente conforme a condição, ou seja, as faltas ficam com cor de background
     for row, values in enumerate(data_frequencia):
        for column, value in enumerate(values):
@@ -864,7 +846,11 @@ def pdf_v2(request, pessoa_id, ano):
 
     t_tipos = Table(data_tp_falta, style=[('GRID',(0,0),(-1,-1), 0.5, colors.black),
                             ('ALIGN',(0,0),(-1,-1),'CENTER'),
-                            ('FONTSIZE',(0,0), (-1,-1),8.5),
+                            ('FONTSIZE',(0,0), (-1,-1),7.5),
+                            ('LEFTPADDING',(0,0),(-1,-1),1),
+                            ('TOPPADDING',(0,0),(-1,-1),1),
+                            ('BOTTOMPADDING',(0,0),(-1,-1),1),
+                            ('RIGHTPADDING',(0,0),(-1,-1),1),
                             ], hAlign='LEFT')
 
     styles = getSampleStyleSheet()
@@ -879,7 +865,20 @@ def pdf_v2(request, pessoa_id, ano):
                         spaceAfter=14
                     ) 
     styleAss = ParagraphStyle('Assinatura',
-                        alignment=1
+                        alignment=1,
+            
+                    ) 
+
+    styleAssTrac =  ParagraphStyle('AssinaturaTrac',
+                        alignment=1,
+                        spaceBefore=20
+            
+                    ) 
+
+    stylePessoa = ParagraphStyle('Pessoa',
+                        # alignment=0,
+                        spaceAfter=4
+                        
                     ) 
    
     # elements.append(Paragraph('<para><img src="https://www.orlandia.sp.gov.br/novo/wp-content/uploads/2017/01/brasaoorlandia.png" width="40" height="40"/> </para>'))
@@ -887,29 +886,35 @@ def pdf_v2(request, pessoa_id, ano):
     # elements.append(Paragraph(f"<strong>Nome</strong>: {contexto['pessoa'].nome}  RM: {contexto['pessoa'].id}", styleB))
     
     data_pessoa = [
-        [Paragraph(f"<strong>Nome: </strong>{contexto['pessoa'].nome}"),Paragraph(f"<strong>Matrícula: </strong>{contexto['pessoa'].id}"),
-        Paragraph(f"<strong>Cargo: </strong>{contexto['des_cargo']}"), Paragraph(f"<strong>Disciplina: </strong>{contexto['disciplina']}")],
-        [Paragraph(f"<strong>CPF: </strong>{contexto['pessoa'].cpf}"),Paragraph(f"<strong>Data de Admissão: </strong>{contexto['pessoa'].admissao}"),
-        Paragraph(f"<strong>Efetivo: </strong>{contexto['pessoa'].efetivo}")]
+        [Paragraph(f"<strong>Nome: </strong>{contexto['pessoa'].nome}",stylePessoa),Paragraph(f"<strong>Matrícula: </strong>{contexto['pessoa'].id}", stylePessoa),
+        Paragraph(f"<strong>Cargo: </strong>{contexto['des_cargo']}", stylePessoa), Paragraph(f"<strong>Disciplina: </strong>{contexto['disciplina']}", stylePessoa)],
+        [Paragraph(f"<strong>CPF: </strong>{contexto['pessoa'].cpf}", stylePessoa),Paragraph(f"<strong>Data de Admissão: </strong>{contexto['pessoa'].admissao}", stylePessoa),
+        Paragraph(f"<strong>Efetivo: </strong>{contexto['pessoa'].efetivo}", stylePessoa)]
     ]
 
-    tb_pessoa = Table(data_pessoa,style=[('GRID',(0,0),(-1,-1), 0.5, colors.white),
-                                ('ALIGN',(0,0),(-1,-1),'LEFT'),
-                            ('FONTSIZE',(0,0), (-1,-1),8.5),
-                            ],hAlign='LEFT')
-    
+   
+
+    tb_pessoa = Table(data_pessoa,style=([('GRID',(0,0),(-1,-1), 0.5, colors.white),
+                            ('LEFTPADDING',(0,0),(-1,-1),2),
+                            ('TOPPADDING',(0,0),(-1,-1),2),
+                            ('BOTTOMPADDING',(0,0),(-1,-1),2),
+                            ('RIGHTPADDING',(0,0),(-1,-1),0),
+                            ('ALIGN',(0,0),(-1,-1),'CENTER'),
+                                      
+                            ]), hAlign='CENTER')
     #Send the data and build the file
     elements.append(tb_pessoa)
     elements.append(t_frequencia)
 
     elements.append(Paragraph(f"", styleB))
-    elements.append(t_tipos)
+    
 
-    elements.append(Paragraph('____________________________', styleAss))
+    elements.append(Paragraph('____________________________', styleAssTrac))
     elements.append(Paragraph('Nome', styleAss))
     elements.append(Paragraph('RG:11.111.111',styleAss))
     elements.append(Paragraph('Diretora',styleAss))
-    # elements.append(t_mes_mes)
+    
+    elements.append(t_tipos)
     doc.build(elements)
     nome_arquivo = str(contexto["pessoa"].nome).replace(' ','_') + datetime.strftime(datetime.now(),'_%d/%m/%Y_%H_%M_%S')
     response = HttpResponse(content_type='application/pdf')
