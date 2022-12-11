@@ -27,6 +27,11 @@ class Pontuacoes(models.Model):
     cargo = models.CharField(max_length=5)
     funcao = models.CharField(max_length=5)
     ue = models.CharField(max_length=5)
+
+    cargo_atrib = models.CharField(max_length=5,default=0)
+    funcao_atrib = models.CharField(max_length=5,default=0)
+    ue_atrib = models.CharField(max_length=5,default=0) 
+
     pessoa = models.ForeignKey(Pessoas, on_delete=models.CASCADE)
 
     class Meta:
@@ -35,15 +40,6 @@ class Pontuacoes(models.Model):
     def __str__(self):
         return self.ano
 
-class PontuacoesAtribuicoes(models.Model):
 
-    ano = models.CharField(max_length=5)
-    cargo = models.CharField(max_length=5)
-    funcao = models.CharField(max_length=5)
-    ue = models.CharField(max_length=5)
-    pessoa = models.ForeignKey(Pessoas, on_delete=models.CASCADE)
-
-    class Meta:
-        unique_together = ('ano','pessoa')
 
    

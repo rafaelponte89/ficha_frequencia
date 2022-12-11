@@ -1,54 +1,66 @@
 {% extends 'template/menu.html'%}
 {% load crispy_forms_tags %}
 {% block content %}
-<h1>Lançamento de Pontuação</h1>
-<label class="bg-danger text-white">Alterações em pontuações existentes podem causar inconsistências!!!</label>
-<form method="POST">
-    {% csrf_token %}
-    {{ form|crispy }}
-    <div clas="form-group">
-        <button class="btn btn-outline-dark">Gravar</button>
-
+<div class="container">
+    <div class="row">
+        <div class="col-12 text-center">
+            <h1>Lançamento de Pontuação</h1>
+            <label class="bg-danger text-white">Alterações em pontuações existentes podem causar
+                inconsistências!!!</label>
+        </div>
     </div>
-</form>
+</div>
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h2>Pontuação Anual</h2>
+            <form method="POST">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <div clas="form-group">
+                    <button class="btn btn-outline-dark">Gravar</button>
 
-<div>
-    <div>
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th scope="col">Ano</th>
-                    <th scope="col">Atualização</th>
-                    <th scope="col">Exclusão</th>
-                </tr>
-            </thead>
-            <tbody>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <table class="table table-hover text-center">
+                <thead>
+                    <tr>
+                        <th scope="col">Ano</th>
+                        <th scope="col">Atualização</th>
+                        <th scope="col">Exclusão</th>
+                    </tr>
+                </thead>
+                <tbody>
 
 
-                {% for pontuacao in pontuacoes %}
-                <tr>
-                    <td>
-                        {{pontuacao}}
-                    </td>
-                    <td>
-                        <a class='btn btn-info'
-                            href="{% url 'atualizarpontuacao' pessoa.id pontuacao.id %}"><span class="material-icons">
-                                autorenew
+                    {% for pontuacao in pontuacoes %}
+                    <tr>
+                        <td>
+                            {{pontuacao}}
+                        </td>
+                        <td>
+                            <a class='btn btn-info' href="{% url 'atualizarpontuacao' pessoa.id pontuacao.id %}"><span
+                                    class="material-icons">
+                                    autorenew
                                 </span></a>
-                    </td>
-                    <td>
-                        <a class='btn btn-danger'
-                            href="{% url 'excluirpontuacao' pessoa.id pontuacao.id %}"><span class="material-icons">
-                                delete
+                        </td>
+                        <td>
+                            <a class='btn btn-danger' href="{% url 'excluirpontuacao' pessoa.id pontuacao.id %}"><span
+                                    class="material-icons">
+                                    delete
                                 </span></a>
-                    </td>
-                </tr>
-                {% endfor %}
+                        </td>
+                    </tr>
+                    {% endfor %}
 
 
-            </tbody>
-        </table>
-
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 {% endblock content %}

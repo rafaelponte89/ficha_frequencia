@@ -1,11 +1,12 @@
 {% extends 'template/menu.html' %}
 
 {% block content %}
-<table class="table table-hover">
+<table class="table table-hover text-center">
     <thead>
         <tr>
 
             <th scope="col">Anos</th>
+            <th scope="col">Visualizar</th>
             <th scope="col">Situação</th>
             <th scope="col">Baixar PDF</th>
         </tr>
@@ -13,17 +14,32 @@
     <tbody>
         {%for ano,status in anos.items %}
         <tr>
-            <td>
-                <a href="{% url 'ficha' pessoa.id ano %}">{{ano}}</a>
+            <td class="align-middle">
+                {{ano}}
+            </td>
+            <td class="align-middle">
+                <a class="btn btn-info" href="{% url 'ficha' pessoa.id ano %}"><span class=" material-icons">
+                    visibility
+                    </span></a>
             </td>
             <td>
-                
-                <a href="{% url 'encerrarano' pessoa.id ano %}">{{status}}</a>
-
+                {% if status == 'Aberto' %}
+                <a class="btn btn-info" href="{% url 'encerrarano' pessoa.id ano %}"><span class=" material-icons">
+                    lock_open
+                    </span>
+                    </a>
+                {% else %}
+                <a class="btn btn-info" href="{% url 'abrirano' pessoa.id ano %}"><span class=" material-icons">
+                    lock
+                    </span>
+                    </a>
+                {% endif %}
 
             </td>
             <td>
-                <a href="{% url 'baixarpdf' pessoa.id ano %}">{{pessoa.nome}}_{{ano}}.pdf</a>
+                <a class="btn btn-info" href="{% url 'baixarpdf' pessoa.id ano %}"><span class="material-icons">
+                    download
+                    </span></a>
             </td>
         </tr>
         {% endfor %}

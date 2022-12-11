@@ -30,12 +30,14 @@ class formularioPontuacao(forms.ModelForm):
     cargo = forms.CharField(max_length=5)
     funcao = forms.CharField(max_length=5)
     ue = forms.CharField(max_length=5)
+
+    cargo_atrib = forms.CharField(max_length=5, label='Cargo Atribuição')
+    funcao_atrib = forms.CharField(max_length=5, label='Função Atribuição')
+    ue_atrib = forms.CharField(max_length=5, label='UE Atribuição')
     pessoa = forms.ModelChoiceField(queryset=Pessoas.objects.all(),
                                       widget=forms.HiddenInput())
 
     class Meta:
         model = Pontuacoes
-        fields = ['ano','cargo','funcao','ue','pessoa']
-
-class formularioAtribuicao(forms.ModelForm):
-    pass
+        # fields = ['ano','cargo','funcao','ue','pessoa',]
+        fields = ['ano','cargo','funcao','ue','pessoa','cargo_atrib','funcao_atrib','ue_atrib','pessoa']
