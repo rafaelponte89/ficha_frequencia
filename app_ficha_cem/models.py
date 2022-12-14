@@ -3,6 +3,7 @@ from django.utils.timezone import now
 from app_falta.models import Faltas
 from app_pessoa.models import Pessoas
 from app_cargo.models import Cargos
+
 # Create your models here.
 
 # licença nojo 8 dias corridos
@@ -23,14 +24,14 @@ class Faltas_Pessoas(models.Model):
 # em desenvolvimento salvar pontuações
 class Pontuacoes(models.Model):
 
-    ano = models.CharField(max_length=5)
-    cargo = models.CharField(max_length=5)
-    funcao = models.CharField(max_length=5)
-    ue = models.CharField(max_length=5)
+    ano = models.IntegerField()
+    cargo = models.IntegerField()
+    funcao = models.IntegerField()
+    ue = models.IntegerField()
 
-    cargo_atrib = models.CharField(max_length=5,default=0)
-    funcao_atrib = models.CharField(max_length=5,default=0)
-    ue_atrib = models.CharField(max_length=5,default=0) 
+    cargo_atrib = models.IntegerField()
+    funcao_atrib = models.IntegerField()
+    ue_atrib = models.IntegerField() 
 
     pessoa = models.ForeignKey(Pessoas, on_delete=models.CASCADE)
 

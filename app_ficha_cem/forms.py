@@ -1,6 +1,6 @@
 from django import forms
 from .models import Pessoas, Faltas_Pessoas, Pontuacoes, Cargos
-from django.forms.widgets import SelectDateWidget, RadioSelect
+from django.forms.widgets import SelectDateWidget, NumberInput
 from django.utils.timezone import now
 from .models import Pessoas
 
@@ -26,14 +26,14 @@ class formularioLF(forms.ModelForm):
         fields = ['data','falta','pessoa','qtd_dias']
 
 class formularioPontuacao(forms.ModelForm):
-    ano = forms.CharField(max_length=5)
-    cargo = forms.CharField(max_length=5)
-    funcao = forms.CharField(max_length=5)
-    ue = forms.CharField(max_length=5)
+    ano = forms.IntegerField(min_value=0)
+    cargo = forms.IntegerField(min_value=0)
+    funcao = forms.IntegerField(min_value=0)
+    ue = forms.IntegerField(min_value=0)
 
-    cargo_atrib = forms.CharField(max_length=5, label='Cargo Atribuição')
-    funcao_atrib = forms.CharField(max_length=5, label='Função Atribuição')
-    ue_atrib = forms.CharField(max_length=5, label='UE Atribuição')
+    cargo_atrib = forms.IntegerField(min_value=0, label='Cargo Atribuição')
+    funcao_atrib = forms.IntegerField(min_value=0, label='Função Atribuição')
+    ue_atrib = forms.IntegerField(min_value=0, label='UE Atribuição')
     pessoa = forms.ModelChoiceField(queryset=Pessoas.objects.all(),
                                       widget=forms.HiddenInput())
 

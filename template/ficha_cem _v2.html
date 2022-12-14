@@ -4,19 +4,19 @@
 
 
 {% block content %}
-<div class="container">
+
     <div class="row">
         <div class="col-2">
             <a class="btn btn-info mt-2 mb-2" href="{% url 'baixarpdf' contexto.pessoa.id contexto.ano %}">Baixar</a>
         </div>
     </div>
     <div class="row">
-        
+
         <div class="col-1">
             <img src="{% static 'app_ficha_cem/brasao_orlandia.png' %}" width="50" />
         </div>
-        <div class="col-10">
-           NOME DA ESCOLA
+        <div class="col-10 bg-danger">
+            NOME DA ESCOLA VERSÃO 2
         </div>
     </div>
     <div class="row">
@@ -55,107 +55,57 @@
 
 
     </div>
-    <div class="col-12 ">
-        <div class="row">
 
-            <table class="table table-sm">
+    <div class="row">
+        <div class="col-12">
 
-                <tbody>
+            <table class="table table-sm table-hover table-bordered">
+                <thead class="text-center">
                     <tr>
-                        <td>
+                        <td class="align-middle">
                             Meses/Dias
                         </td>
                         {% for dia in contexto.dias %}
-                        <td>
+                        <td class="align-middle">
                             {{dia}}
                         </td>
                         {% endfor %}
                     </tr>
+                    <tr>
+                        {% for dia in contexto.dias %}
+                        <td></td>
+                        {% endfor %}
+                        
+                    </tr>
+                </thead>
 
+                <tbody>
                     {% for mes,eventos in contexto.meses.items %}
                     <tr>
-                        <td>
+                        <td class=>
                             {{mes}}
                         </td>
                         {% for evento in eventos %}
-                        {% if evento != 'C' and evento != ' ' %}
-                        <td class="bg-primary">
+                        {% if evento != 'C' and evento != '-' %}
+                        <td class="bg-primary text-center">
 
                             <strong>{{evento}}</strong>
 
                         </td>
                         {% else %}
-                        <td color="green">
-
+                        <td class="text-center">
                             {{evento}}
                         </td>
-                        
                         {% endif %}
                         {% endfor %}
+                       
                     </tr>
                     {% endfor %}
                 </tbody>
 
             </table>
 
-            <table class="table table-sm table-hover">
-
-                <tr>
-                    <th class="text-center" colspan="3">Tempos </th>
-                </tr>
-                <tr>
-                    <th class="text-center" colspan="3">Atribuição </th>
-                </tr>
-                <tr>
-                    <th>Função</th>
-
-                    <th>Cargo</th>
-
-                    <th>U.E.</th>
-
-                </tr>
-
-                <tr>
-                    <td>{{contexto.funcao_at}}</td>
-                    <td>{{contexto.cargo_at}}</td>
-                    <td>{{contexto.ue_at}}</td>
-                </tr>
-                <tr>
-                    <th class="text-center" colspan="3">Ano Anterior </th>
-                </tr>
-                <tr>
-                    <th>Função</th>
-
-                    <th>Cargo</th>
-
-                    <th>U.E.</th>
-
-                </tr>
-
-                <tr>
-                    <td>{{contexto.funcao_a}}</td>
-                    <td>{{contexto.cargo_a}}</td>
-                    <td>{{contexto.ue_a}}</td>
-                </tr>
-                <tr>
-                    <th class="text-center" colspan="3">Ano Atual</th>
-                </tr>
-                <tr>
-                    <th>Função</th>
-
-                    <th>Cargo</th>
-
-                    <th>U.E.</th>
-
-                </tr>
-
-                <tr>
-                    <td>{{contexto.funcao}}</td>
-                    <td>{{contexto.cargo}}</td>
-                    <td>{{contexto.ue}}</td>
-                </tr>
-
-            </table>
+            
 
             {% if contexto.pontuacao %}
             <a href="{% url 'encerrarano' contexto.pessoa.id contexto.ano contexto.status  %}">Encerrar Ano</a>
@@ -195,5 +145,5 @@
         </div>
 
     </div>
-</div>
+
 {% endblock content %}
