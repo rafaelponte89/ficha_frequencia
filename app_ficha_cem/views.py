@@ -547,7 +547,30 @@ def consultar_pontuacao(pessoa_id, ano,num=0):
         funcao = 0
         ue = 0
 
-    return cargo, funcao, ue
+    return funcao,cargo,ue
+
+def transformar_em_um_dicionario(funcao,cargo,ue):
+    
+    meses_pontuacao = {}
+    cargo_lst = []
+    funcao_lst = []
+    ue_lst = []
+    for v in cargo.values():
+        cargo_lst.append(v)
+    
+    for v in funcao.values():
+        funcao_lst.append(v)
+
+    for v in ue.values():
+        ue_lst.append(v)
+
+    i = 0
+    for k, v in cargo.items():
+        meses_pontuacao[k] = [funcao_lst[i],cargo_lst[i], ue_lst[i]]
+        i = i + 1
+
+    return meses_pontuacao
+
 
 def buscar_informacoes_ficha_v2(pessoa_id, ano):
     anos, pessoa = listar_anos(pessoa_id)
@@ -555,10 +578,11 @@ def buscar_informacoes_ficha_v2(pessoa_id, ano):
     
    
     meses = configurar_meses_v3(ano,pessoa_id)
-    cargo, funcao, ue  = gerar_pontuacao_anual_v2(ano,pessoa)
-    cargo_a, funcao_a, ue_a = consultar_pontuacao(pessoa_id, ano, 1)
-
-
+    funcao, cargo, ue  = gerar_pontuacao_anual_v2(ano,pessoa)
+    funcao_a, cargo_a, ue_a = consultar_pontuacao(pessoa_id, ano, 1)
+    ano_a = ano - 1
+    meses_pontuacao = transformar_em_um_dicionario(funcao,cargo,ue)
+    print(cargo)
     dias = []
     for dia in range(1,32):
         dias.append(dia)
@@ -642,6 +666,7 @@ def buscar_informacoes_ficha_v2(pessoa_id, ano):
         pessoa.efetivo='Não'
 
     contexto = {
+        'ano_a':ano_a,
         'meses': meses,
         'falta_por_mes': faltas_mes_a_mes,
         'ano': ano,
@@ -658,7 +683,8 @@ def buscar_informacoes_ficha_v2(pessoa_id, ano):
         'dias': dias,
         'tp_faltas': tipo_faltas,
         'admissao':admissao,
-        'anos':anos
+        'anos':anos,
+        'meses_pontu': meses_pontuacao
         # 'pagesize':'A4'
 
     }
@@ -798,7 +824,7 @@ def gerar_pontuacao_anual_v2(ano,pessoa):
     cargo = acumular_dias(ano,pessoa.id,acumulado_cargo)
     ue = acumular_dias(ano,pessoa.id,acumulado_ue)
     
-    return cargo, funcao, ue
+    return funcao, cargo, ue
 
 #em desenvolvimento parte de geração de pdf ficha cem
 def pdf(request, pessoa_id, ano):
@@ -1016,9 +1042,6 @@ def pdf_v2(request, pessoa_id, ano):
     data_frequencia[10].extend([contexto['cargo'], contexto['funcao'], contexto['ue']])
 
    
-    
-   
-
     # cria estilo 
     style_table_corpo = TableStyle([('GRID',(0,0),(-1,-1), 0.5, colors.black),
                             ('LEFTPADDING',(0,0),(-1,-1),2),
@@ -1220,7 +1243,7 @@ def pdf_v3(request, pessoa_id, ano):
     print(cargo_anual,funcao_anual,ue_anual)
     inicio_linha = 3
     for i in range(12):
-        data_frequencia[inicio_linha].extend([cargo_anual[i],funcao_anual[i],ue_anual[i]])
+        data_frequencia[inicio_linha].extend([funcao_anual[i],cargo_anual[i],ue_anual[i]])
         inicio_linha += 1
     # print("Cargo",contexto['cargo'],"Funcao",contexto['funcao'],'UE',contexto['ue'])
    
@@ -1376,11 +1399,11 @@ def encerrar_ano_v2(request, pessoa_id, ano):
     pessoa = Pessoas.objects.get(pk=pessoa_id)
     dicionario =   gerar_pontuacao_anual_v2(ano,pessoa)
    
-    cargo = dicionario[0]['dezembro']
-    funcao = dicionario[1]['dezembro']
+    funcao = dicionario[0]['dezembro']
+    cargo = dicionario[1]['dezembro']
     ue = dicionario[2]['dezembro']
-   
     
+
     anos, pessoa = listar_anos(pessoa.id)
     min_ano = min(anos)
     max_ano = max(anos)
@@ -1399,22 +1422,19 @@ def encerrar_ano_v2(request, pessoa_id, ano):
     if request.method == 'GET':
 
         if  q1.count() == 0 and  min_ano == ano and pessoa.efetivo == True:
-            pontuacao = Pontuacoes(ano=ano,cargo=cargo,funcao=funcao,ue=ue,pessoa=pessoa, 
-            cargo_atrib=0, funcao_atrib=0,ue_atrib=0)
+            pontuacao = Pontuacoes(ano=ano,funcao=funcao,cargo=cargo,ue=ue,pessoa=pessoa)
             pontuacao.save()
 
             messages.success(request,f"Ano {ano} fechado com sucesso!")
         
         elif q2.count() != 0 :
-            pontuacao = Pontuacoes(ano=ano,cargo=cargo,funcao=funcao,ue=ue,pessoa=pessoa, 
-            cargo_atrib=0, funcao_atrib=0,ue_atrib=0)
+            pontuacao = Pontuacoes(ano=ano,funcao=funcao,cargo=cargo,ue=ue,pessoa=pessoa)
             pontuacao.save()
             
             messages.success(request,f"Ano {ano} fechado com sucesso!")
             
         elif q1.count() == 0 and pessoa.efetivo == False:
-            pontuacao = Pontuacoes(ano=ano,cargo=cargo,funcao=funcao,ue=ue,pessoa=pessoa, 
-            cargo_atrib=0, funcao_atrib=0,ue_atrib=0)
+            pontuacao = Pontuacoes(ano=ano,funcao=funcao,cargo=cargo,ue=ue,pessoa=pessoa)
             pontuacao.save()
             
             messages.success(request,f"Ano {ano} fechado com sucesso!") 
@@ -1424,8 +1444,6 @@ def encerrar_ano_v2(request, pessoa_id, ano):
 
         
         return redirect('listarficha',pessoa_id)     
-
-   # return render(request,'template/listar_ficha.html')
 
     return render(request,'template/listar_ficha.html',{'anos':anos_status, 'pessoa':pessoa})
 

@@ -27,17 +27,16 @@ class formularioLF(forms.ModelForm):
 
 class formularioPontuacao(forms.ModelForm):
     ano = forms.IntegerField(min_value=0)
-    cargo = forms.IntegerField(min_value=0)
     funcao = forms.IntegerField(min_value=0)
+    cargo = forms.IntegerField(min_value=0)
+    
     ue = forms.IntegerField(min_value=0)
 
-    cargo_atrib = forms.IntegerField(min_value=0, label='Cargo Atribuição')
-    funcao_atrib = forms.IntegerField(min_value=0, label='Função Atribuição')
-    ue_atrib = forms.IntegerField(min_value=0, label='UE Atribuição')
+   
     pessoa = forms.ModelChoiceField(queryset=Pessoas.objects.all(),
                                       widget=forms.HiddenInput())
 
     class Meta:
         model = Pontuacoes
         # fields = ['ano','cargo','funcao','ue','pessoa',]
-        fields = ['ano','cargo','funcao','ue','pessoa','cargo_atrib','funcao_atrib','ue_atrib','pessoa']
+        fields = ['ano','funcao','cargo','ue','pessoa']

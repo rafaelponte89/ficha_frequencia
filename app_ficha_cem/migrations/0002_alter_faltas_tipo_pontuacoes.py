@@ -21,8 +21,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('ano', models.CharField(max_length=5)),
-                ('cargo', models.CharField(max_length=5)),
                 ('funcao', models.CharField(max_length=5)),
+                ('cargo', models.CharField(max_length=5)),
                 ('ue', models.CharField(max_length=5)),
                 ('pessoa', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='app_ficha_cem.pessoas')),
             ],

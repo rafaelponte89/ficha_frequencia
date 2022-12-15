@@ -25,13 +25,9 @@ class Faltas_Pessoas(models.Model):
 class Pontuacoes(models.Model):
 
     ano = models.IntegerField()
-    cargo = models.IntegerField()
     funcao = models.IntegerField()
+    cargo = models.IntegerField()
     ue = models.IntegerField()
-
-    cargo_atrib = models.IntegerField()
-    funcao_atrib = models.IntegerField()
-    ue_atrib = models.IntegerField() 
 
     pessoa = models.ForeignKey(Pessoas, on_delete=models.CASCADE)
 

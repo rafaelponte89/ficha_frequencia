@@ -15,11 +15,7 @@ class Migration(migrations.Migration):
             name='ano',
             field=models.IntegerField(),
         ),
-        migrations.AlterField(
-            model_name='pontuacoes',
-            name='cargo',
-            field=models.IntegerField(),
-        ),
+      
         migrations.AlterField(
             model_name='pontuacoes',
             name='cargo_atrib',
@@ -28,6 +24,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='pontuacoes',
             name='funcao',
+            field=models.IntegerField(),
+        ),
+          migrations.AlterField(
+            model_name='pontuacoes',
+            name='cargo',
             field=models.IntegerField(),
         ),
         migrations.AlterField(
