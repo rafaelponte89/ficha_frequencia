@@ -1390,6 +1390,20 @@ def atualizar_pontuacoes(request, pontuacao_id, pessoa_id):
     
     return render(request,'template/lancar_pontuacao.html',{'form':form,'pessoa':pessoa,'pontuacoes':pontuacoes})
 
+def consultar_anos_status(pessoa):
+    anos, pessoa = listar_anos(pessoa)
+    
+    anos_status = {}
+   
+    for a in anos:
+        status  = checar_existencia_pontuacao(a,pessoa)
+        if status:
+            status = 'Aberto'
+        else:
+            status = 'Fechado'
+        anos_status[a] = status
+
+    return anos_status,anos
 
 def encerrar_ano_v2(request, pessoa_id, ano):
     
@@ -1404,19 +1418,20 @@ def encerrar_ano_v2(request, pessoa_id, ano):
     ue = dicionario[2]['dezembro']
     
 
-    anos, pessoa = listar_anos(pessoa.id)
+    # anos, pessoa = listar_anos(pessoa.id)
+    anos_status, anos = consultar_anos_status(pessoa.id)
     min_ano = min(anos)
     max_ano = max(anos)
 
-    anos_status = {}
+    # anos_status = {}
    
-    for a in anos:
-        status  = checar_existencia_pontuacao(a,pessoa)
-        if status:
-            status = 'Aberto'
-        else:
-            status = 'Fechado'
-        anos_status[a] = status
+    # for a in anos:
+    #     status  = checar_existencia_pontuacao(a,pessoa)
+    #     if status:
+    #         status = 'Aberto'
+    #     else:
+    #         status = 'Fechado'
+    #     anos_status[a] = status
     
    
     if request.method == 'GET':
@@ -1507,7 +1522,8 @@ def encerrar_ano(request, pessoa_id, ano):
 def abrir_ano(request, pessoa_id, ano):
 
     pessoa = Pessoas.objects.get(pk=pessoa_id)
-    anos, pessoa = listar_anos(pessoa_id)
+    # anos, pessoa = listar_anos(pessoa_id)
+    anos_status, anos = consultar_anos_status(pessoa.id)
     abrir_todos = False
     q2= Pontuacoes.objects.all().filter(pessoa=pessoa_id).filter(ano=ano+1)
     min_ano = min(anos)
@@ -1516,15 +1532,15 @@ def abrir_ano(request, pessoa_id, ano):
     if ano == min_ano:
         abrir_todos = True
 
-    anos_status = {}
+    # anos_status = {}
    
-    for a in anos:
-        status  = checar_existencia_pontuacao(a,pessoa)
-        if status:
-            status = 'Aberto'
-        else:
-            status = 'Fechado'
-        anos_status[a] = status
+    # for a in anos:
+    #     status  = checar_existencia_pontuacao(a,pessoa)
+    #     if status:
+    #         status = 'Aberto'
+    #     else:
+    #         status = 'Fechado'
+    #     anos_status[a] = status
 
     
     if request.method == 'GET':
