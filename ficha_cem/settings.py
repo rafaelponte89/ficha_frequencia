@@ -39,11 +39,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'crispy_forms',
+   
     'app_ficha_cem',
     'app_cargo',
     'app_falta',
-    'app_pessoa'
+    'app_pessoa',
+
+    # 3rd
+     'crispy_forms',
+    'bootstrap_datepicker_plus',
+    'bootstrap4'
 ]
 
 MIDDLEWARE = [
@@ -110,10 +115,13 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+# LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'pt-br'
 
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Sao_Paulo'
+# TIME_ZONE = 'UTC'
+
 
 USE_I18N = True
 
@@ -131,3 +139,14 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CRIPSPY_TEMPLATE_PACK='bootstrap4'
+
+BOOTSTRAP_DATEPICKER_PLUS = {
+    "options": {
+        "locale": "pt",
+    },
+    "variant_options": {
+        "date": {
+            "format": "DD/MM/YYYY",
+        },
+    }
+}

@@ -6,10 +6,12 @@ class Pessoas(models.Model):
      (True,'Sim'),
      (False,'Não')
     )
+    
     id = models.CharField(max_length=6, primary_key=True)
     nome = models.CharField(max_length=150)
     dt_nasc = models.DateField(default='1991-01-01')
     cpf = models.CharField(max_length=11, default='11111111111')
     admissao = models.DateField(default='1991-01-01')
+    saida = models.DateField(null=True)
     efetivo = models.BooleanField(choices=EFETIVO, default=False)
     cargo = models.ForeignKey(Cargos, on_delete=models.CASCADE, related_name="pessoas_cargos")

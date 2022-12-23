@@ -1,0 +1,37 @@
+{% extends 'template/menu.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<table class="table table-hover">
+    <thead class="text-center">
+    
+        <tr>
+
+            <th scope="col">Lançar Evento</th>
+            
+
+
+
+        </tr>
+    </thead>
+    <tbody class="text-center">
+
+        
+        <tr>
+           
+            <td><a class='btn btn-info' href="{% url 'eventocoletivo' %}"><span class="material-icons">
+                        add
+                    </span></a>
+               
+
+            </td>
+            
+
+            <!-- <td class="text-left align-middle">Todos</td> -->
+        </tr>
+    
+        </tr>
+    </tbody>
+</table>
+{% endblock content %}

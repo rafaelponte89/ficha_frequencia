@@ -9,6 +9,19 @@
     <div class="col-2">
         <a class="btn btn-info mt-2 mb-2" href="{% url 'baixarpdf' contexto.pessoa.id contexto.ano %}">Baixar</a>
     </div>
+    <div class="col-2">
+        {% if contexto.ano_status == 'Aberto' %}
+        <a class="btn btn-info" href="{% url 'encerrarano' contexto.pessoa.id contexto.ano %}"><span class=" material-icons">
+                lock_open
+            </span>
+        </a>
+        {% else %}
+        <a class="btn btn-info" href="{% url 'abrirano' contexto.pessoa.id contexto.ano %}"><span class=" material-icons">
+                lock
+            </span>
+        </a>
+        {% endif %}
+    </div>
 </div>
 <div class="row">
 
@@ -43,7 +56,10 @@
         <strong>CPF: </strong><label>{{ contexto.pessoa.cpf }}</label>
     </div>
     <div class="col-3">
-        <strong>Admissão: </strong><label>{{contexto.pessoa.admissao}}</label>
+        <strong>Admissão: </strong><label>{{contexto.pessoa.admissao|date:'d/m/Y'}}</label>
+    </div>
+    <div class="col-3">
+        <strong>Saída: </strong><label>{{contexto.pessoa.saida|date:'d/m/Y'}}</label>
     </div>
     <div class="col-3">
         {% if contexto.pessoa.efetivo == 'Sim' %}

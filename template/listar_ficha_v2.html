@@ -1,0 +1,55 @@
+{% extends 'template/menu.html' %}
+
+{% block content %}
+<table class="table table-hover text-center">
+    <thead>
+        <tr>
+
+            <th scope="col">Anos</th>
+            <th scope="col">Visualizar</th>
+       
+
+          
+            <th scope="col">Situação</th>
+            <th scope="col">Baixar PDF</th>
+        </tr>
+    </thead>
+    <tbody>
+        {%for ano,status in anos.items %}
+        <tr>
+            <td class="align-middle">
+                {{ano}}
+            </td>
+            <td class="align-middle">
+                <a class="btn btn-info" href="{% url 'ficha' pessoa.id ano %}"><span class=" material-icons">
+                        visibility
+                    </span></a>
+            </td>
+           
+            
+            <td>
+                {% if status == 'Aberto' %}
+                <a class="btn btn-info" href="{% url 'encerrarano' pessoa.id ano %}"><span class=" material-icons">
+                        lock_open
+                    </span>
+                </a>
+                {% else %}
+                <a class="btn btn-info" href="{% url 'abrirano' pessoa.id ano %}"><span class=" material-icons">
+                        lock
+                    </span>
+                </a>
+                {% endif %}
+
+            </td>
+            <td>
+                <a class="btn btn-info" href="{% url 'baixarpdf' pessoa.id ano %}"><span class="material-icons">
+                        download
+                    </span></a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tr>
+    </tbody>
+</table>
+
+{% endblock content %}
