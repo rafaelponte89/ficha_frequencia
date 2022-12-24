@@ -4,7 +4,7 @@
 {% bootstrap_css %}
 
 {% block content %}
-{% bootstrap_javascript jquery='full' %} 
+{% bootstrap_javascript jquery='full' %}
 {{form.media}}
 <label>{{ nome }}</label>
 <form method="POST">
@@ -22,6 +22,7 @@
             <th scope="col">Data</th>
             <th scope="col">Tipo</th>
             <th scope="col">Quantidade Dias</th>
+            <th scope="col">Excluir</th>
         </tr>
     </thead>
     <tbody>
@@ -38,6 +39,12 @@
             <td>
                 {{falta.qtd_dias}}
             </td>
+            <td>
+                <a class='btn btn-danger' href="{% url 'excluirevento' pessoa.id falta.id %}"><span
+                        class="material-icons">
+                        delete
+                    </span></a>
+            </td>
         </tr>
         {% endfor %}
 
@@ -50,7 +57,7 @@
     let texto = "";
     falta.addEventListener("change", function () {
         texto = falta.options[falta.selectedIndex].text;
-        if (texto === "NOJO"){
+        if (texto === "NOJO") {
             document.getElementById("id_qtd_dias").value = 8;
             // document.getElementById("id_qtd_dias").disabled=true;
         }
@@ -73,7 +80,7 @@
         }
     });
 
-  
+
 
 </script>
 {% endblock content %}

@@ -291,12 +291,22 @@ def gerar_lancamento_em_memoria(data_lanc,qtd_dias):
     return anos
 
 
+def verificar_status_ano(ano, pessoa_id):
+    pontuacao = Pontuacoes.objects.filter(pessoa=pessoa_id).filter(ano=ano)
+    ano_fechado = True
+
+    if pontuacao.count() == 0:
+        ano_fechado = False
+    
+    return ano_fechado
+
+
 # faz a pesquisa e incremento para verificar se existe falta lançada naquela data, impedindo lançamento em data
 # que já exista falta computada
 def lancar_falta(data_lanc, qtd_dias, pessoa_id):
-    pontuacao = Pontuacoes.objects.filter(pessoa=pessoa_id).filter(ano=data_lanc.year)
+    # pontuacao = Pontuacoes.objects.filter(pessoa=pessoa_id).filter(ano=data_lanc.year)
     conflito = True
-    ano_fechado = True
+    # ano_fechado = True
    
    
     q1 = Faltas_Pessoas.objects.filter(data__year=data_lanc.year)
@@ -317,15 +327,17 @@ def lancar_falta(data_lanc, qtd_dias, pessoa_id):
         datas_lanc.append(data_lanc)
         data_lanc += timedelta(days=1)
 
-    if pontuacao.count() == 0:
-        ano_fechado = False
+    # if pontuacao.count() == 0:
+    #     ano_fechado = False
         
     for lancamento in datas_lanc:
         if lancamento in datas:
             conflito = False
             break
             
-    return conflito, ano_fechado
+    # return conflito, ano_fechado
+    return conflito
+
         
 
 # fazer o lançamento de faltas para determinada pessoa
@@ -334,6 +346,7 @@ def pessoas_faltas(request, pessoa_id):
     pessoa = Pessoas.objects.get(pk=pessoa_id)
     pessoa_falta = Faltas_Pessoas.objects.filter(pessoa=pessoa).order_by('data')[:30]
     admissao = pessoa.admissao
+    saida = pessoa.saida
     data_lancamento = 0
    
     if request.method == 'POST':
@@ -344,7 +357,7 @@ def pessoas_faltas(request, pessoa_id):
         qtd_dias = int(form.data['qtd_dias'])
         data_lancamento = form['data'].value()
         falta = Faltas.objects.get(pk=form['falta'].value())
-        print(data_lancamento)
+       
         data_lancamento = datetime.strptime(data_lancamento, '%Y-%m-%d').date()
 
         # criar intervalos de lançamentos na memória e dividir por ano (ano é chave)
@@ -352,11 +365,11 @@ def pessoas_faltas(request, pessoa_id):
        
         # verifica se os dados preenchidos são válidos
         # verifica se existe faltas naquele intervalo
-        conflito, ano_fechado = lancar_falta(data_lancamento, qtd_dias ,pessoa_id)
-        
-
-
-        if form.is_valid() and data_lancamento > admissao:
+        # conflito, ano_fechado = lancar_falta(data_lancamento, qtd_dias ,pessoa_id)
+        conflito = lancar_falta(data_lancamento, qtd_dias, pessoa_id)
+        ano_fechado = verificar_status_ano(data_lancamento.year,pessoa_id)
+      
+        if form.is_valid() and data_lancamento > admissao and data_lancamento <= saida:
             
             if conflito:
                 if not ano_fechado:
@@ -378,11 +391,30 @@ def pessoas_faltas(request, pessoa_id):
 
             else:
                 messages.error(request,"Não foi possível registrar a falta! Pode existir conflito de datas!",'danger')
+        else:
+            messages.warning(request,f"Precisa estar no Intervalo da Admissão e Saída!  Data Admissão: {admissao.strftime('%d/%m/%Y')} Data Saída: {saida.strftime('%d/%m/%y')}")
+
     else:
+        
         form = formularioLF(initial={'pessoa':pessoa})
     return render(request,'template/lancar_falta.html', {'form':form, 'pessoa':pessoa, 'faltas':pessoa_falta})
 
 
+def excluir_pessoas_faltas(request, pessoa_id, lancamento_id):
+
+    lancamento = Faltas_Pessoas.objects.filter(pk=lancamento_id)
+    pessoa = Pessoas.objects.get(pk=pessoa_id)
+    pessoa_falta = Faltas_Pessoas.objects.filter(pessoa=pessoa).order_by('data')[:30]
+
+    if request.method == 'GET':
+        lancamento.delete()    
+        messages.success(request,"Lançamento Apagado!")
+        return redirect('lancarfalta',pessoa_id)
+    else:
+        form = formularioPontuacao(initial={'pessoa':pessoa})
+    
+    return render(request,'template/lancar_falta.html', {'form':form, 'pessoa':pessoa, 'faltas':pessoa_falta})
+        
 # listar anos de uma determinada pessoa
 def listar_anos(pessoa_id):
     anos = []

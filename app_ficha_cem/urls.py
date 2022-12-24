@@ -1,9 +1,11 @@
 from .views import gerar_ficha, abrir_ano, \
-      listar_ficha, encerrar_ano_v2, pessoas_faltas, pdf_v3, lancar_pontuacoes, atualizar_pontuacoes, excluir_pontuacoes, coletivo, lancar_evento_coletivo
+      listar_ficha, encerrar_ano_v2, pessoas_faltas, pdf_v3, lancar_pontuacoes, atualizar_pontuacoes,  \
+      excluir_pontuacoes, coletivo, lancar_evento_coletivo, excluir_pessoas_faltas
 from django.urls.conf import path,include
 urlpatterns = [
     path('pessoas/',include('app_pessoa.urls')),
     path('pessoas/<str:pessoa_id>/faltas', pessoas_faltas, name="lancarfalta" ),
+    path('pessoas/<str:pessoa_id>/faltas/<int:lancamento_id>', excluir_pessoas_faltas, name="excluirevento" ),
     path('pessoas/<str:pessoa_id>/pontuacoes', lancar_pontuacoes, name='lancarpontuacao'),
     path('pessoas/<str:pessoa_id>/pontuacoes/<str:pontuacao_id>', atualizar_pontuacoes, name='atualizarpontuacao'),
     path('pessoas/<str:pessoa_id>/pontuacoes/<str:pontuacao_id>/apagar', excluir_pontuacoes, name='excluirpontuacao'),
