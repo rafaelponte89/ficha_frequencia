@@ -33,10 +33,10 @@ def retornar_dias(ano):
     
     return dias
 
-def retornar_mes_num(mes_nome):
+def retornar_mes_num(mes_nome, ano):
     meses = {
         'janeiro':[1,31],
-        'fevereiro':[2,28],
+        'fevereiro':[2,29 if bissexto(ano) else 28],
         'marco':[3,31],
         'abril':[4,30],
         'maio':[5,31],
@@ -51,6 +51,8 @@ def retornar_mes_num(mes_nome):
     num_mes = meses[mes_nome]
 
     return num_mes
+
+
 
 def retornar_mes_nome(mes_num):
     meses = {
@@ -156,24 +158,7 @@ def configurar_meses_v3(ano, pessoa_id):
     dia_adm = pessoa.admissao.day - 1
     ano_adm = pessoa.admissao.year
 
-    mes_saida = 0
-    dia_saida = 0
-    ano_saida = 0
-    if pessoa.saida != None:
-        mes_saida = pessoa.saida.month
-        dia_saida = pessoa.saida.day + 1
-        ano_saida = pessoa.saida.year
-    meses = {}
-    
-    dias = []
-    # construção dos meses
-    for i in range(1,13):
-        mes = retornar_mes_nome(i)[0]
-        for i in range(31):
-            dias.append('-')
-        meses[mes] = dias
-        dias = []
-
+    meses = criar_estrutura_meses() 
 
     # dicionario de meses conforme data de admissao
     if ano == ano_adm:
@@ -198,6 +183,94 @@ def configurar_meses_v3(ano, pessoa_id):
                     meses[m][dia] = 'C'
     
     return meses
+
+def criar_estrutura_meses():
+
+    estrutura_meses_nome = {}
+   
+
+    dias = []
+    # construção dos meses
+    for i in range(1,13):
+        mes = retornar_mes_nome(i)[0]
+        for j in range(31):
+            dias.append('-')
+        estrutura_meses_nome[mes] = dias
+        
+        dias = []
+
+    return estrutura_meses_nome
+# configurar meses de acordo com a data de admissao de uma pessoa
+def configurar_meses_v4(ano, pessoa_id):
+    pessoa = Pessoas.objects.get(pk=pessoa_id)
+    mes_adm = pessoa.admissao.month
+    dia_adm = pessoa.admissao.day - 1
+    ano_adm = pessoa.admissao.year
+
+    mes_saida = 0
+    dia_saida = 0
+    ano_saida = 0
+    if pessoa.saida != None:
+        mes_saida = pessoa.saida.month
+        dia_saida = pessoa.saida.day
+        ano_saida = pessoa.saida.year
+
+    meses = criar_estrutura_meses()
+
+    #dicionario de meses conforme data de admissao
+    if ano_adm == ano and ano_saida == ano:
+        for mes in meses:
+                qtd_dias = retornar_mes_num(mes,ano)[1]
+                if mes_adm == retornar_mes_num(mes,ano)[0]:
+                    for dia in range(qtd_dias):
+                        if dia >= dia_adm:
+                            meses[mes][dia] = 'C'
+                else:
+                    if mes_adm < retornar_mes_num(mes,ano)[0] and mes_saida > retornar_mes_num(mes,ano)[0]:
+                        for dia in range(qtd_dias):
+                            meses[mes][dia] = 'C'
+                    else:
+                        if mes_saida == retornar_mes_num(mes,ano)[0]:
+                            for dia in range(qtd_dias):
+                                if dia < dia_saida:
+                                    meses[mes][dia] = 'C'
+
+    else:
+        if ano == ano_adm:
+            for mes in meses:
+                qtd_dias = retornar_mes_num(mes,ano)[1]
+                if mes_adm == retornar_mes_num(mes,ano)[0]:
+                    for dia in range(qtd_dias):
+                        if dia >= dia_adm:
+                            meses[mes][dia] = 'C'
+                else:
+                    if mes_adm < retornar_mes_num(mes,ano)[0]:
+                        for dia in range(qtd_dias):
+                            meses[mes][dia] = 'C'
+            
+        elif ano == ano_saida:
+            for mes in meses:
+                qtd_dias = retornar_mes_num(mes,ano)[1]
+                if mes_saida == retornar_mes_num(mes,ano)[0]:
+                    for dia in range(qtd_dias):
+                        if dia < dia_saida:
+                            meses[mes][dia] = 'C'
+                else:
+                    if mes_saida > retornar_mes_num(mes,ano)[0]:
+                        for dia in range(qtd_dias):
+                            meses[mes][dia] = 'C'
+            
+        else:
+           if ano_adm != ano and ano_saida != ano:
+                for mes in meses:
+                    qtd_dias = retornar_mes_num(mes,ano)[1]
+
+                    for dia in range(qtd_dias):
+                        meses[mes][dia] = 'C'
+  
+    
+    return meses
+
 
 def gerar_lancamento_em_memoria(data_lanc,qtd_dias):
     '''Atraves da data de lancamento e quantidade de dias gera um dicionario ano a ano com as devidas datas'''
@@ -469,12 +542,13 @@ def transformar_em_um_dicionario(funcao,cargo,ue):
 def buscar_informacoes_ficha_v2(pessoa_id, ano):
     anos, pessoa = listar_anos(pessoa_id)
     pessoa = Pessoas.objects.get(pk=pessoa_id)
-    meses = configurar_meses_v3(ano,pessoa_id)
+    meses = configurar_meses_v4(ano,pessoa_id)
     funcao, cargo, ue  = gerar_pontuacao_anual_v2(ano,pessoa)
     funcao_a, cargo_a, ue_a = consultar_pontuacao(pessoa_id, ano, 1)
     ano_a = ano - 1
     meses_pontuacao = transformar_em_um_dicionario(funcao,cargo,ue)
     
+    print(meses,'na ficha')
     ano_st = consultar_anos_status(pessoa.id)
     ano_status = ano_st[0][ano]
 
@@ -1223,11 +1297,15 @@ def pdf_v3(request, pessoa_id, ano):
     elements.append(Paragraph(f"<strong>Ficha Frequência - Ano</strong>:{contexto['ano']}", styleH))
     # elements.append(Paragraph(f"<strong>Nome</strong>: {contexto['pessoa'].nome}  RM: {contexto['pessoa'].id}", styleB))
     
+  
+    
+    saida = '' if contexto['pessoa'].saida == None else  contexto['pessoa'].saida.strftime('%d/%m/%Y')
+
     data_pessoa = [
         [Paragraph(f"<strong>Nome: </strong>{contexto['pessoa'].nome}",stylePessoa),Paragraph(f"<strong>Matrícula: </strong>{contexto['pessoa'].id}", stylePessoa),
         Paragraph(f"<strong>Cargo: </strong>{contexto['des_cargo']}", stylePessoa), Paragraph(f"<strong>Disciplina: </strong>{contexto['disciplina']}", stylePessoa)],
         [Paragraph(f"<strong>CPF: </strong>{contexto['pessoa'].cpf}", stylePessoa),Paragraph(f"<strong>Data de Admissão: </strong>{contexto['pessoa'].admissao.strftime('%d/%m/%Y')}", stylePessoa),
-        Paragraph(f"<strong>Data de Saída: </strong>{contexto['pessoa'].saida.strftime('%d/%m/%Y')}", stylePessoa),
+        Paragraph(f"<strong>Data de Saída: </strong>{saida}", stylePessoa),
         Paragraph(f"<strong>Efetivo: </strong>{contexto['pessoa'].efetivo}", stylePessoa)]
     ]
 
@@ -1509,7 +1587,7 @@ def lancar_pontuacoes(request, pessoa_id):
 
 # dado um determinado ano acumula dias por meses
 def acumular_dias(ano,pessoa_id,acumulado=0):
-    meses = configurar_meses_v3(ano,pessoa_id)
+    meses = configurar_meses_v4(ano,pessoa_id)
     
     dias_acumulados_por_mes = {}
     # for k in meses.keys():
