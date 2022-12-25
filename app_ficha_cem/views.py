@@ -202,6 +202,7 @@ def criar_estrutura_meses():
     return estrutura_meses_nome
 # configurar meses de acordo com a data de admissao de uma pessoa
 def configurar_meses_v4(ano, pessoa_id):
+    '''A versão atual do método leva em consideração data de admissão e saída para fazer a devida configuração'''
     pessoa = Pessoas.objects.get(pk=pessoa_id)
     mes_adm = pessoa.admissao.month
     dia_adm = pessoa.admissao.day - 1
@@ -338,8 +339,6 @@ def lancar_falta(data_lanc, qtd_dias, pessoa_id):
     # return conflito, ano_fechado
     return conflito
 
-        
-
 # fazer o lançamento de faltas para determinada pessoa
 def pessoas_faltas(request, pessoa_id):
 
@@ -427,8 +426,6 @@ def listar_anos(pessoa_id):
 
     return anos[-5:], pessoa
 
-def listar_anos_status():
-    pass
 def listar_ficha(request, pessoa_id):
     anos, pessoa = listar_anos(pessoa_id)
     anos_status = {}
@@ -497,7 +494,6 @@ def contar_tipos_faltas(faltas):
     
     return tipo_faltas
 
-
 def faltas_por_mes_v2(meses):
     '''Guarda dados de comparecimento e todos os tipos de faltas que ocorreram e suas quantidades, torna uniforme a todos os meses'''
     faltas_por_mes = {}
@@ -517,7 +513,6 @@ def faltas_por_mes_v2(meses):
                
     return faltas_por_mes
     
-
 def faltas_por_mes(meses):
     '''Guarda as faltas referentes somente aos meses em que elas aparecem, não guarda armazenamentos'''
     faltas_por_mes = {}
@@ -569,7 +564,6 @@ def transformar_em_um_dicionario(funcao,cargo,ue):
         i = i + 1
 
     return meses_pontuacao
-
 
 def buscar_informacoes_ficha_v2(pessoa_id, ano):
     anos, pessoa = listar_anos(pessoa_id)
@@ -692,9 +686,144 @@ def buscar_informacoes_ficha_v2(pessoa_id, ano):
     return contexto
 
 
+# criação 25/12/2022
+def buscar_informacoes_ficha_v3(pessoa_id, ano):
+    anos, pessoa = listar_anos(pessoa_id)
+    pessoa = Pessoas.objects.get(pk=pessoa_id)
+    meses = configurar_meses_v4(ano,pessoa_id)
+    funcao, cargo, ue  = gerar_pontuacao_anual_v2(ano,pessoa)
+    funcao_a, cargo_a, ue_a = consultar_pontuacao(pessoa_id, ano, 1)
+    ano_a = ano - 1
+    meses_pontuacao = transformar_em_um_dicionario(funcao,cargo,ue)
+    
+    print(funcao,cargo,ue,'funcao_cargo_ue')
+
+    meses_copy = meses.copy()
+    
+    # for mes, dias in meses_copy.items():
+    #     for m, pontuacao in meses_pontuacao.items():
+    #         if mes == m:
+    #             dias.extend(pontuacao)
+   
+
+    # print(meses)
+
+
+    ano_st = consultar_anos_status(pessoa.id)
+    ano_status = ano_st[0][ano]
+
+    dias = []
+    for dia in range(1,32):
+        dias.append(dia)
+   
+    faltas = Faltas_Pessoas.objects.all().order_by('data').filter(data__year=ano).filter(pessoa=pessoa_id)
+    admissao = pessoa.admissao
+    saida = pessoa.saida
+
+    conta = 0
+    for l in str(pessoa.cargo):
+        if l == '-':
+            conta +=1
+
+    if conta > 1:
+        cargo_disciplina = str(pessoa.cargo).replace('-','')
+        cargo_disciplina = cargo_disciplina + ' - N/A'
+        cargo_disciplina = tuple(cargo_disciplina.split('-'))
+    elif conta == 0:
+        cargo_disciplina = str(pessoa.cargo) + ' - N/A'
+        cargo_disciplina = tuple(cargo_disciplina.split('-'))
+    else:
+        cargo_disciplina = tuple(str(pessoa.cargo).split('-'))
+
+    des_cargo, disciplina = cargo_disciplina
+ 
+    tipo_faltas=contar_tipos_faltas(faltas)
+   
+    data = ''
+
+    for falta in faltas:
+       
+        data = falta.data
+        
+        for d in range(falta.qtd_dias):
+              
+            if d > 0:
+                data = data + timedelta(days=1)
+
+            # retorna as datas úteis se tipo da falta for P, caso contrário retorna a própria data
+            data = data_util(data, falta.falta.tipo)
+
+            mes = data.month
+            dia = data.day - 1
+            
+            if mes == 1:
+                meses['janeiro'][dia] = falta.falta.tipo
+            elif mes == 2:
+                meses['fevereiro'][dia] = falta.falta.tipo
+            elif mes == 3:
+                meses['marco'][dia] = falta.falta.tipo
+            elif mes == 4:
+                meses['abril'][dia] = falta.falta.tipo
+            elif mes == 5:
+                meses['maio'][dia] = falta.falta.tipo
+            elif mes == 6:
+                meses['junho'][dia] = falta.falta.tipo
+            elif mes == 7:
+                meses['julho'][dia] = falta.falta.tipo
+            elif mes == 8:
+                meses['agosto'][dia] = falta.falta.tipo
+            elif mes == 9:
+                meses['setembro'][dia] = falta.falta.tipo
+            elif mes == 10:
+                meses['outubro'][dia] = falta.falta.tipo
+            elif mes == 11:
+                meses['novembro'][dia] = falta.falta.tipo
+            elif mes == 12:
+                meses['dezembro'][dia] = falta.falta.tipo
+
+
+    faltas_mes_a_mes = faltas_por_mes_v2(meses)  
+
+    print(faltas_mes_a_mes)          
+    
+    pessoa.cpf = f'{pessoa.cpf[:3]}.{pessoa.cpf[3:6]}.{pessoa.cpf[6:9]}-{pessoa.cpf[-2:]}'
+    
+    if pessoa.efetivo:
+        pessoa.efetivo='Sim'
+    else:
+        pessoa.efetivo='Não'
+
+    contexto = {
+        'ano_a':ano_a,
+        'ano_status':ano_status,
+        'meses': meses,
+        'falta_por_mes': faltas_mes_a_mes,
+        'ano': ano,
+        'funcao': funcao,
+        'cargo': cargo,
+        'ue': ue,
+        'des_cargo':des_cargo,
+        'disciplina': disciplina,
+        'funcao_a': funcao_a,
+        'cargo_a': cargo_a,
+        'ue_a': ue_a,
+        'nome': pessoa.nome,
+        'pessoa': pessoa,
+        'dias': dias,
+        'tp_faltas': tipo_faltas,
+        'admissao':admissao,
+        'saida':saida,
+        'anos':anos,
+        'meses_pontu': meses_pontuacao
+        # 'pagesize':'A4'
+
+    }
+    
+    return contexto
+
 def gerar_ficha(request, pessoa_id, ano):
     
-    contexto = buscar_informacoes_ficha_v2(pessoa_id, ano)
+    contexto = buscar_informacoes_ficha_v3(pessoa_id, ano)
     return render(request,'template/ficha_cem _v2.html', {'contexto':contexto})
 
 def index(request):
@@ -1580,7 +1709,7 @@ def abrir_ano(request, pessoa_id, ano):
 
 def excluir_pontuacoes(request, pessoa_id, pontuacao_id):
     pontuacao = Pontuacoes.objects.get(pk=pontuacao_id)
-    pontuacoes = Pontuacoes.objects.all().filter(pessoa=pessoa_id)
+    pontuacoes = Pontuacoes.objects.all().filter(pessoa=pessoa_id).order_by('ano')
     pessoa = Pessoas.objects.get(pk=pessoa_id)
 
     if request.method == 'GET':
@@ -1595,19 +1724,22 @@ def excluir_pontuacoes(request, pessoa_id, pontuacao_id):
 def lancar_pontuacoes(request, pessoa_id):
 
     pessoa = Pessoas.objects.get(pk=pessoa_id)
-    pontuacoes = Pontuacoes.objects.filter(pessoa=pessoa_id)
+    pontuacoes = Pontuacoes.objects.filter(pessoa=pessoa_id).order_by('ano')
     
     if request.method == 'POST':
         form = formularioPontuacao(request.POST)
-        
-        if form.is_valid():
+        ano = form['ano'].value()
+        if pessoa.admissao.year <= int(ano) and int(ano) <= pessoa.saida.year :
+            if form.is_valid():
             
-            form.save()
-            messages.success(request,"Pontuação Gravada!")
-            return redirect('lancarpontuacao',pessoa_id)
+                form.save()
+                messages.success(request,"Pontuação Gravada!")
+                return redirect('lancarpontuacao',pessoa_id)
+            else:
+                messages.error(request,"Erro ao  Gravar Pontuação!",'danger')
         else:
-            messages.error(request,"Erro ao  Gravar Pontuação!",'danger')
-            
+            messages.error(request,f"Erro ao  Gravar Pontuação! Ano Admissao: {pessoa.admissao.year} Ano Saída: {pessoa.saida.year}",'danger')
+
 
     else:
         form = formularioPontuacao(initial={'pessoa':pessoa})
@@ -1650,10 +1782,8 @@ def coletivo(request):
 def lancar_evento_coletivo(request):
     pessoas = Pessoas.objects.all()
    
-   
     if request.method == 'POST':
 
-        
         # instância do formulário para pegar dados
         form = formularioLF(request.POST)
         

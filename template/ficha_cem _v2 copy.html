@@ -4,14 +4,14 @@
 
 
 {% block content %}
-<style>
+<!-- <style>
     .corpo td,
     th {
-        font-size: 12pt;
-        padding: 1px !important;
+        font-size: 10pt;
+        padding: 0 !important;
         margin: 0;
         outline: 0;
-     
+
 
     }
 
@@ -28,14 +28,14 @@
         margin: 0;
         outline: 0;
     }
-</style>
+</style> -->
 
 <div class="ficha">
     <div class="row">
-        <div class="col">
+        <div class="col-2">
             <a class="btn btn-info mt-2 mb-2" href="{% url 'baixarpdf' contexto.pessoa.id contexto.ano %}">Baixar</a>
         </div>
-        <div class="col">
+        <div class="col-2">
             {% if contexto.ano_status == 'Aberto' %}
             <a class="btn btn-info" href="{% url 'encerrarano' contexto.pessoa.id contexto.ano %}"><span
                     class=" material-icons">
@@ -53,44 +53,43 @@
     </div>
     <div class="row">
 
-
-        <div class="col-1 text-center">
+        <div class="col-1">
             <img src="{% static 'app_ficha_cem/brasao_orlandia.png' %}" width="50" />
         </div>
-        <div class="col text-center">
+        <div class="col-9">
             NOME DA ESCOLA
         </div>
     </div>
 
     <div class="row">
-        <div class="col-12">
+        <div class="col-12 text-left">
             <h2 class="text-center">Ficha Frequência {{contexto.ano}} - ON <strong>(V2)</strong></h2>
         </div>
-        <div class="col">
+        <div class="col-3">
             <strong>Nome: </strong><label>{{contexto.nome}}</label>
         </div>
-        <div class="col">
+        <div class="col-3">
             <strong>RM: </strong><label>{{contexto.pessoa.id}}</label>
         </div>
-        <div class="col">
+        <div class="col-3">
             <strong>Cargo: </strong><label>{{ contexto.des_cargo }}</label>
         </div>
-        <div class="col">
+        <div class="col-3">
             <strong>Disciplina: </strong><label>{{ contexto.disciplina }}</label>
         </div>
     </div>
 
     <div class="row">
-        <div class="col">
+        <div class="col-3">
             <strong>CPF: </strong><label>{{ contexto.pessoa.cpf }}</label>
         </div>
-        <div class="col">
+        <div class="col-3">
             <strong>Admissão: </strong><label>{{contexto.pessoa.admissao|date:'d/m/Y'}}</label>
         </div>
-        <div class="col">
+        <div class="col-3">
             <strong>Saída: </strong><label>{{contexto.pessoa.saida|date:'d/m/Y'}}</label>
         </div>
-        <div class="col">
+        <div class="col-3">
             {% if contexto.pessoa.efetivo == 'Sim' %}
             <strong>Efetivo: </strong><label>Sim</label>
             {% else %}
@@ -104,22 +103,14 @@
                 <table class="table table-sm table-hover table-bordered corpo">
                     <thead class="text-center">
                         <tr>
-                            {% for dia in contexto.dias %}
-                            <td></td>
-                            {% endfor %}
-                        </tr>
-                        <tr>
                             <td class="align-middle">
                                 Meses/Dias
                             </td>
                             {% for dia in contexto.dias %}
-                            <td class="align-middle col" >
+                            <td class="align-middle">
                                 {{dia}}
                             </td>
                             {% endfor %}
-                            <td>Função</td>
-                            <td>Cargo</td>
-                            <td>UE</td>
                         </tr>
 
                     </thead>
@@ -132,7 +123,7 @@
                             </td>
                             {% for evento in eventos %}
                             {% if evento != 'C' and evento != '-' %}
-                            <td class="bg-primary text-light text-center">
+                            <td class="bg-primary text-center">
 
                                 <strong>{{evento}}</strong>
 
