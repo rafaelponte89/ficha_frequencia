@@ -696,17 +696,14 @@ def buscar_informacoes_ficha_v3(pessoa_id, ano):
     ano_a = ano - 1
     meses_pontuacao = transformar_em_um_dicionario(funcao,cargo,ue)
     
-    print(funcao,cargo,ue,'funcao_cargo_ue')
-
-    meses_copy = meses.copy()
+    # print(funcao,cargo,ue,'funcao_cargo_ue')
     
-    # for mes, dias in meses_copy.items():
-    #     for m, pontuacao in meses_pontuacao.items():
-    #         if mes == m:
-    #             dias.extend(pontuacao)
    
 
     # print(meses)
+
+
+    
 
 
     ano_st = consultar_anos_status(pessoa.id)
@@ -784,8 +781,41 @@ def buscar_informacoes_ficha_v3(pessoa_id, ano):
 
     faltas_mes_a_mes = faltas_por_mes_v2(meses)  
 
-    print(faltas_mes_a_mes)          
+
+    linha = 0
+    eventos_por_mes = []
+    intermediaria = []
     
+    for k in faltas_mes_a_mes:
+        linha +=1
+        if k in ['janeiro','marco','maio','julho','agosto','outubro','dezembro']:
+            eventos_por_mes.append(list(faltas_mes_a_mes[k].values()))
+        elif k in ['abril','junho','setembro','novembro']:
+            intermediaria = list(faltas_mes_a_mes[k].values())
+            eventos_por_mes.append(intermediaria)
+        else:
+            intermediaria = list(faltas_mes_a_mes[k].values())
+            eventos_por_mes.append(intermediaria)
+
+    # pega chaves de um mes qualquer que será a linha de eventos
+    cabecalho_tp_faltas = list(faltas_mes_a_mes['janeiro'].keys())
+    linha = 0
+    for valor in meses.values():
+        valor.extend(eventos_por_mes[linha])
+        linha +=1
+    
+    linha = 0
+    for mes, dias_do_mes in meses.items():
+        for m, pontuacao in meses_pontuacao.items():
+            if mes == m:
+                dias_do_mes.extend(pontuacao)
+   
+
+    colunas_eventos = len(faltas_mes_a_mes['fevereiro'])
+    colunas = range(len(meses['fevereiro'])-31-4 - colunas_eventos)
+    colunas_pontuacao = range(len(meses['fevereiro'])-31-3)
+    # print(faltas_mes_a_mes)          
+    print(colunas_eventos)
     pessoa.cpf = f'{pessoa.cpf[:3]}.{pessoa.cpf[3:6]}.{pessoa.cpf[6:9]}-{pessoa.cpf[-2:]}'
     
     if pessoa.efetivo:
@@ -814,7 +844,11 @@ def buscar_informacoes_ficha_v3(pessoa_id, ano):
         'admissao':admissao,
         'saida':saida,
         'anos':anos,
-        'meses_pontu': meses_pontuacao
+        'meses_pontu': meses_pontuacao,
+        'cabecalho_tf': cabecalho_tp_faltas,
+        'colunas': colunas,
+        'colunas_eventos': colunas_eventos,
+        'colunas_pontuacao': colunas_pontuacao
         # 'pagesize':'A4'
 
     }
@@ -1748,7 +1782,6 @@ def lancar_pontuacoes(request, pessoa_id):
     
     return render(request,'template/lancar_pontuacao.html',{'form':form,'pessoa':pessoa,'pontuacoes':pontuacoes})
 
-
 # dado um determinado ano acumula dias por meses
 def acumular_dias(ano,pessoa_id,acumulado=0):
     meses = configurar_meses_v4(ano,pessoa_id)
@@ -1773,7 +1806,6 @@ def acumular_dias(ano,pessoa_id,acumulado=0):
     
    
     return dias_acumulados_por_mes
-
 
 def coletivo(request):
 

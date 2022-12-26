@@ -4,64 +4,93 @@
 
 
 {% block content %}
+
 <style>
-    .corpo td,
-    th {
-        font-size: 12pt;
-        padding: 1px !important;
-        margin: 0;
-        outline: 0;
-     
+    /* .corpo td,
+        th,
+        tr {
+            font-size: 12px;
+            padding: 1.5px !important;
+          
+           
+        } */
+    @media print {
+        html {
+            margin: 0px;
+            padding: 0px;
+            outline: 0px;
+        }
 
-    }
+        .ficha div {
+            font-size: 9pt;
+            padding: 0 !important;
+            margin: 0;
+            outline: 0;
+        }
 
-    .ficha {
-        font-size: 12pt;
-        padding: 0 !important;
-        margin: 0;
-        outline: 0;
-    }
+        .corpo td,
+        th,
+        tr {
+            font-size: 9px;
+            padding: 1.5px !important;
+            margin: 0;
+            outline: 0;
+            color: black !important;
+        }
 
-    .ficha div {
-        font-size: 12pt;
-        padding: 0 !important;
-        margin: 0;
-        outline: 0;
+        .nao-imprime {
+            display: none;
+        }
+
+        .table-responsive {
+            display: table !important;
+        }
+
+        @page {
+            size: landscape;
+        }
     }
 </style>
 
+
 <div class="ficha">
-    <div class="row">
-        <div class="col">
-            <a class="btn btn-info mt-2 mb-2" href="{% url 'baixarpdf' contexto.pessoa.id contexto.ano %}">Baixar</a>
-        </div>
-        <div class="col">
-            {% if contexto.ano_status == 'Aberto' %}
-            <a class="btn btn-info" href="{% url 'encerrarano' contexto.pessoa.id contexto.ano %}"><span
-                    class=" material-icons">
-                    lock_open
-                </span>
-            </a>
-            {% else %}
-            <a class="btn btn-info" href="{% url 'abrirano' contexto.pessoa.id contexto.ano %}"><span
-                    class=" material-icons">
-                    lock
-                </span>
-            </a>
-            {% endif %}
+    <!--Controles-->
+    <div class="nao-imprime">
+        <div class="row">
+            <div class="col">
+                <!-- <a class="btn btn-info mt-2 mb-2"
+                    href="{% url 'baixarpdf' contexto.pessoa.id contexto.ano %}">Baixar</a> -->
+                <a class="btn btn-info mt-2 mb-2" href="#" id="imprimir">Imprimir</a>
+            </div>
+            <div class="col">
+                {% if contexto.ano_status == 'Aberto' %}
+                <a class="btn btn-info" href="{% url 'encerrarano' contexto.pessoa.id contexto.ano %}"><span
+                        class=" material-icons">
+                        lock_open
+                    </span>
+                </a>
+                {% else %}
+                <a class="btn btn-info" href="{% url 'abrirano' contexto.pessoa.id contexto.ano %}"><span
+                        class=" material-icons">
+                        lock
+                    </span>
+                </a>
+                {% endif %}
+            </div>
         </div>
     </div>
-    <div class="row">
 
-
+    <!--Identificação da sede de Frequẽncia-->
+    <div class="row imprime">
         <div class="col-1 text-center">
             <img src="{% static 'app_ficha_cem/brasao_orlandia.png' %}" width="50" />
         </div>
         <div class="col text-center">
-            NOME DA ESCOLA
+            NOME DA EMPRESA
         </div>
     </div>
 
+    <!--Dados da Pessoa-->
     <div class="row">
         <div class="col-12">
             <h2 class="text-center">Ficha Frequência {{contexto.ano}} - ON <strong>(V2)</strong></h2>
@@ -79,7 +108,6 @@
             <strong>Disciplina: </strong><label>{{ contexto.disciplina }}</label>
         </div>
     </div>
-
     <div class="row">
         <div class="col">
             <strong>CPF: </strong><label>{{ contexto.pessoa.cpf }}</label>
@@ -98,158 +126,136 @@
             {% endif %}
         </div>
     </div>
-    <div class="w-25">
-        <div class="row">
-            <div class="col-8">
-                <table class="table table-sm table-hover table-bordered corpo">
-                    <thead class="text-center">
-                        <tr>
-                            {% for dia in contexto.dias %}
-                            <td></td>
-                            {% endfor %}
-                        </tr>
-                        <tr>
-                            <td class="align-middle">
-                                Meses/Dias
-                            </td>
-                            {% for dia in contexto.dias %}
-                            <td class="align-middle col" >
-                                {{dia}}
-                            </td>
-                            {% endfor %}
-                            <td>Função</td>
-                            <td>Cargo</td>
-                            <td>UE</td>
-                        </tr>
 
-                    </thead>
+    <!--Tabela de Frequencia, Eventos, Pontos-->
+    <div class="table-responsive">
+        <table class="table table-sm table-hover table-bordered corpo imprime">
+            <thead class="text-center">
+                <tr>
+                    <td class="align-middle" rowspan="3">
+                        Meses
+                    </td>
+                    <td colspan="31">Dias</td>
+                    <td colspan="{{contexto.colunas_eventos}}">Eventos</td>
+                    {% for dia in contexto.colunas %}
+                    <td></td>
+                    {% endfor %}
+                    <td colspan="3">Tempos</td>
 
-                    <tbody>
-                        {% for mes,eventos in contexto.meses.items %}
-                        <tr>
-                            <td>
-                                {{mes}}
-                            </td>
-                            {% for evento in eventos %}
-                            {% if evento != 'C' and evento != '-' %}
-                            <td class="bg-primary text-light text-center">
+                </tr>
+                <tr>
 
-                                <strong>{{evento}}</strong>
 
-                            </td>
-                            {% else %}
-                            <td class="text-center">
-                                {{evento}}
-                            </td>
-                            {% endif %}
-                            {% endfor %}
-
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-12">
-                <table class="table table-sm table-hover table-bordered corpo">
-                    <thead class="text-center">
-                        <tr>
-                            <td class="align-middle" rowspan="2">
-                                Meses
-                            </td>
-
-                            <td class="align-middle" colspan="4">
-                                Tempo
-                            </td>
-                        </tr>
-                        <tr>
-
-                            <td class="align-middle">
-                                Função
-                            </td>
-                            <td class="align-middle">
-                                Cargo
-                            </td>
-                            <td class="align-middle">
-                                Unidade
-                            </td>
-
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        <tr class="text-center">
-                            <td>Pontos do ano de <strong>{{contexto.ano_a}}</strong></td>
-                            <td><strong>{{contexto.funcao_a}}</strong></td>
-                            <td><strong>{{contexto.cargo_a}}</strong></td>
-                            <td><strong>{{contexto.ue_a}}</strong></td>
-                        </tr>
-                        {% for mes,eventos in contexto.meses_pontu.items%}
-                        <tr>
-
-                            <td>
-                                {{mes}}
-                            </td>
-
-                            {%for evento in eventos %}
-                            {% if mes == 'outubro' or mes == 'dezembro' %}
-                            <td class="text-center bg-primary text-white">
-                                {{evento}}
-                            </td>
-                            {% else %}
-                            <td class="text-center">
-                                {{evento}}
-                            </td>
-                            {% endif %}
-
-                            </td>
-
-                            {% endfor %}
-                        </tr>
-                        {% endfor %}
+                    {% for dia in contexto.dias %}
+                    <td class="align-middle">
+                        {{dia}}
+                    </td>
+                    {% endfor %}
+                    {% for tp in contexto.cabecalho_tf %}
+                    <td class="align-middle">
+                        {{tp}}
+                    </td>
+                    {% endfor %}
+                    <td>
+                        Função
+                    </td>
+                    <td>
+                        Cargo
+                    </td>
+                    <td>
+                        UE
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="31">Pontuação do ano de: <strong>{{contexto.ano_a}} ===== >>></strong></td>
 
 
 
 
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                    {% for dia in contexto.colunas_pontuacao %}
+                    <td></td>
+                    {% endfor %}
+                    <td>
+                        {{contexto.funcao_a}}
+                    </td>
+                    <td>
+                        {{contexto.cargo_a}}
+                    </td>
+                    <td>
+                        {{contexto.ue_a}}
+                    </td>
+                </tr>
 
-        <div class="col-6 mt-2">
-            <div class="row">
-                <table class="table table-sm">
-                    <thead>
-                        <tr>
-                            <th>Sigla</th>
-                            <th>Descrição</th>
-                            <th>QTD</th>
-                        </tr>
+            </thead>
 
-                    </thead>
-                    <tbody>
-                        {% for sigla, descricao in contexto.tp_faltas.items %}
-                        <tr>
+            <tbody>
+                {% for mes,eventos in contexto.meses.items %}
+                <tr>
+                    <td>
+                        {{mes}}
+                    </td>
+                    {% for evento in eventos %}
+                    {% if evento != 'C' and evento != '-' %}
+                    <td class="bg-primary text-light text-center">
 
-                            <td>
-                                {{ sigla }}
-                            </td>
-                            {% for i in descricao %}
-                            <td>
-                                {{i}}
-                            </td>
-                            {% endfor %}
+                        <strong>{{evento}}</strong>
 
+                    </td>
+                    {% else %}
+                    <td class="text-center">
+                        {{evento}}
+                    </td>
+                    {% endif %}
+                    {% endfor %}
 
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-        </div>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
+
+
+<div class="col-5 mt-2">
+    <div class="row">
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Sigla</th>
+                    <th>Descrição</th>
+                    <th>QTD</th>
+                </tr>
+
+            </thead>
+            <tbody>
+                {% for sigla, descricao in contexto.tp_faltas.items %}
+                <tr>
+
+                    <td>
+                        {{ sigla }}
+                    </td>
+                    {% for i in descricao %}
+                    <td>
+                        {{i}}
+                    </td>
+                    {% endfor %}
+
+
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+<script>
+    var el = document.querySelector('#imprimir');
+    el.addEventListener('click', function (e) {
+        e.preventDefault();      // impedir que o link seja seguido imediatamente
+        var href = this.href;    // colocar em cache o url
+        self.print();            // imprimir
+        window.location.href = href;  // ir para nova página
+    });
+</script>
+
 {% endblock content %}
