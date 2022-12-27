@@ -21,8 +21,10 @@
         <tr>
             <th scope="col">Data</th>
             <th scope="col">Tipo</th>
-            <th scope="col">Quantidade Dias</th>
+            <th scope="col">Quantidade</th>
             <th scope="col">Excluir</th>
+            <th class="text-center" scope="col">Acumulo H/A</th>
+
         </tr>
     </thead>
     <tbody>
@@ -45,6 +47,11 @@
                         delete
                     </span></a>
             </td>
+            {% if falta.falta.tipo == "HA" %}
+            <td class="text-center">{{ha|get_item:falta.id}}</td>
+            {% else %}
+            <td class="text-center"></td>
+            {% endif %}
         </tr>
         {% endfor %}
 

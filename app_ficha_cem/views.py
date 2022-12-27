@@ -13,6 +13,7 @@ from django.template.loader import get_template
 from datetime import datetime, timedelta
 from django.http import HttpResponse
 import reportlab
+from django.template.defaulttags import register
 # determina se o ano é bissexto
 def bissexto(ano):
 
@@ -342,9 +343,22 @@ def pessoas_faltas(request, pessoa_id):
     pessoa_falta = Faltas_Pessoas.objects.filter(pessoa=pessoa).order_by('data')[:30]
     admissao = pessoa.admissao
     saida = pessoa.saida 
-   
     data_lancamento = 0
 
+    # ideia hora/aula
+    ha = {}
+    valor_ha = []
+    for lancamento in pessoa_falta:
+        if lancamento.falta.tipo == 'HA':
+            valor_ha.append(lancamento.qtd_dias)
+            ha[lancamento.id] = valor_ha.copy()
+            
+  
+    for k,v in ha.items():
+        ha[k] = sum(v)
+
+    print(ha,'===')
+    
     if request.method == 'POST':
         # instância do formulário para pegar dados
         form = formularioLF(request.POST)
@@ -403,7 +417,7 @@ def pessoas_faltas(request, pessoa_id):
     else:
             
         form = formularioLF(initial={'pessoa':pessoa})
-    return render(request,'template/lancar_falta.html', {'form':form, 'pessoa':pessoa, 'faltas':pessoa_falta})
+    return render(request,'template/lancar_falta.html', {'form':form, 'pessoa':pessoa, 'faltas':pessoa_falta,'ha':ha})
 
 
 def excluir_pessoas_faltas(request, pessoa_id, lancamento_id):
@@ -502,7 +516,7 @@ def contar_tipos_faltas(faltas):
     return tipo_faltas
 
 def faltas_por_mes_v2(meses):
-    '''Guarda dados de comparecimento e todos os tipos de faltas que ocorreram e suas quantidades, torna uniforme a todos os meses'''
+    '''Guarda dados de comparecimento e todos os tipos de faltas que ocorreram e suas quantidades, uniforme a todos os meses'''
     faltas_por_mes = {}
     faltas_por_mes_n = {}
 
@@ -1089,8 +1103,16 @@ def pdf_v3(request, pessoa_id, ano):
     # data_frequencia[10].extend([contexto['cargo'], contexto['funcao'], contexto['ue']])
 
    
-    
+    tamanho_fonte = 12
+    qtd_eventos = len(contexto['tp_faltas'])
+    if  qtd_eventos > 3 :
+        if qtd_eventos > 6 and qtd_eventos <= 9:
+            tamanho_fonte = tamanho_fonte / qtd_eventos  * 5
+        else:
+            tamanho_fonte = tamanho_fonte / qtd_eventos  * 3.3
+
    
+    print(tamanho_fonte)
 
     # cria estilo 
     style_table_corpo = TableStyle([('GRID',(0,0),(-1,-1), 0.5, colors.black),
@@ -1099,7 +1121,7 @@ def pdf_v3(request, pessoa_id, ano):
                             ('BOTTOMPADDING',(0,0),(-1,-1),2),
                             ('RIGHTPADDING',(0,0),(-1,-1),2),
                             ('ALIGN',(0,0),(-1,-1),'CENTER'),
-                            ('FONTSIZE',(0,0), (-1,-1),8.5), 
+                            ('FONTSIZE',(0,0), (-1,-1),tamanho_fonte), 
                             # ('SPAN',(-3,-13),(-1,-12)),
                             # ('SPAN',(-3,-8),(-1,-8)),
                             # ('SPAN',(-3,-6),(-1,-6)),
@@ -1475,3 +1497,8 @@ def lancar_evento_coletivo(request):
     form = formularioLF()
 
     return render(request,'template/lancar_evento_coletivo.html', {'form':form})
+
+
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key)
