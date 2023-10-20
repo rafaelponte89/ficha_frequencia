@@ -325,7 +325,7 @@ def verificar_data_saida(data_lancamento,pessoa_id):
 def verificar_ano_saida(pessoa_id):
     pessoa = Pessoas.objects.get(pk=pessoa_id)
    
-    ativo = pessoa.saida 
+    ativo = pessoa.saida.year 
     if ativo != None:
         ano = pessoa.saida.year
         if ano <= ativo:

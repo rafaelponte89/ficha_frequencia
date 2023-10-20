@@ -16,7 +16,6 @@ class formularioLF(forms.ModelForm):
     
     qtd_dias = forms.IntegerField()
 
-   
 
     class Meta:
         model = Faltas_Pessoas
