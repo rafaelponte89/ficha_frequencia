@@ -325,10 +325,10 @@ def verificar_data_saida(data_lancamento,pessoa_id):
 def verificar_ano_saida(pessoa_id):
     pessoa = Pessoas.objects.get(pk=pessoa_id)
    
-    ativo = pessoa.saida.year 
+    ativo = pessoa.saida 
     if ativo != None:
-        ano = pessoa.saida.year
-        if ano <= ativo:
+        ano = pessoa.admissao.year
+        if ano >= ativo.year:
             return True
         else:
             return False
@@ -1409,7 +1409,11 @@ def lancar_pontuacoes(request, pessoa_id):
             else:
                 messages.error(request,"Erro ao  Gravar Pontuação!",'danger')
         else:
-            messages.error(request,f"Erro ao  Gravar Pontuação! Ano Admissao: {pessoa.admissao.year} Ano Saída: {pessoa.saida.year}",'danger')
+            if pessoa.saida == None:
+                messages.error(request,f"Erro ao  Gravar Pontuação! Ano Admissao: {pessoa.admissao.year}",'danger')
+
+            else:
+                messages.error(request,f"Erro ao  Gravar Pontuação! Ano Admissao: {pessoa.admissao.year} Ano Saída: {pessoa.saida.year}",'danger')
 
 
     else:
