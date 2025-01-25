@@ -1,0 +1,92 @@
+{% extends 'template/menu.html' %}
+{% load crispy_forms_tags %}
+{% load bootstrap4 %}
+{% bootstrap_css %}
+
+
+{% block content %}
+
+<input type="text" id="nome" name="nome" placeholder="Nome do Profissional" class="textinput form-control mb-3"/>
+
+<table class="table table-hover">
+    <thead class="text-center">
+        <tr>
+            <th scope="col">Matrícula</th>
+            <th scope="col">Nome</th>
+            <th scope="col">Cargo</th>
+            <th scope="col">Lançar Falta</th>
+            <th scope="col">Frequência</th>
+            <th scope="col">Pontuação</th>
+            <th scope="col">Atualização</th>
+          
+        </tr>
+    </thead>
+    <tbody class="text-center" id="resultado">
+        <!-- Pesquisa aqui-->
+    </tbody>
+</table>
+
+
+
+{% endblock content %}
+
+{% block script %}
+<script>
+    $(document).ready(function () {
+
+        $("#nome").focus();
+
+        function lancar_pontuacao(){
+            $.get({
+            url: "{% url 'pesquisarpessoas' %}",
+            data: { },
+            success: (response) => {
+                
+            },
+          });
+
+        }
+
+        function pesquisar_nome(nome){
+
+            $.get({
+            url: "{% url 'pesquisarpessoas' %}",
+            data: { nome: nome},
+            success: (response) => {
+                $("#resultado").html(response);
+                $(".lancarpontuacao").off();
+                $(".lancarfalta").off();
+                $(".verfichacem").off();
+                $(".atualizarpessoa").off();
+
+                $(".lancarpontuacao").click(function(){
+                    window.location.href = `${$(this).val()}/pontuacoes`;
+
+                });
+                $(".lancarfalta").click(function(){
+                    window.location.href = `${$(this).val()}/faltas`;
+                });
+
+                $(".verfichacem").click(function(){
+                    window.location.href = `${$(this).val()}/fichas`;
+                    
+                });
+
+                $(".atualizarpessoa").click(function(){
+                    window.location.href = `atualizarpessoa/${$(this).val()}`;
+
+                });
+                
+            },
+          });
+
+        }
+
+        $("#nome").keyup(() => {
+           pesquisar_nome($("#nome").val());
+        })
+
+    });
+
+</script>
+{% endblock script %}

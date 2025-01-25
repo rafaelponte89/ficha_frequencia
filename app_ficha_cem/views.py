@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from .models import Faltas, Faltas_Pessoas, Pontuacoes
+from .models import Faltas, Faltas_Pessoas, Pontuacoes, Cargos
 from .forms import formularioLF, formularioPontuacao
 from django.views import View
 from django.contrib import messages
@@ -8,7 +8,6 @@ from app_pessoa.models import Pessoas
 # Create your views here.
 
 from io import BytesIO
-from xhtml2pdf import pisa
 from django.template.loader import get_template
 from datetime import datetime, timedelta
 from django.http import HttpResponse
@@ -310,11 +309,12 @@ def lancar_falta(data_lanc, qtd_dias, pessoa_id):
     # return conflito, ano_fechado
     return conflito
 
+
 def verificar_data_saida(data_lancamento,pessoa_id):
     pessoa = Pessoas.objects.get(pk=pessoa_id)
    
     ativo = pessoa.saida 
-    if ativo != None:
+    if ativo is not None:
         if data_lancamento <= ativo:
             return True
         else:
@@ -322,11 +322,12 @@ def verificar_data_saida(data_lancamento,pessoa_id):
     else:
         return True
 
+
 def verificar_ano_saida(pessoa_id):
     pessoa = Pessoas.objects.get(pk=pessoa_id)
    
     ativo = pessoa.saida 
-    if ativo != None:
+    if ativo is not None:
         ano = pessoa.admissao.year
         if ano >= ativo.year:
             return True
@@ -353,11 +354,10 @@ def pessoas_faltas(request, pessoa_id):
             valor_ha.append(lancamento.qtd_dias)
             ha[lancamento.id] = valor_ha.copy()
             
-  
-    for k,v in ha.items():
+    for k, v in ha.items():
         ha[k] = sum(v)
 
-    print(ha,'===')
+    print(ha, '===')
     
     if request.method == 'POST':
         # instância do formulário para pegar dados
@@ -371,17 +371,16 @@ def pessoas_faltas(request, pessoa_id):
         data_lancamento = datetime.strptime(data_lancamento, '%Y-%m-%d').date()
 
         # criar intervalos de lançamentos na memória e dividir por ano (ano é chave)
-        dia_mes_ano = gerar_lancamento_em_memoria(data_lancamento,qtd_dias)
+        dia_mes_ano = gerar_lancamento_em_memoria(data_lancamento, qtd_dias)
        
         # verifica se os dados preenchidos são válidos
         # verifica se existe faltas naquele intervalo
         # conflito, ano_fechado = lancar_falta(data_lancamento, qtd_dias ,pessoa_id)
         conflito = lancar_falta(data_lancamento, qtd_dias, pessoa_id)
-        ano_fechado = verificar_status_ano(data_lancamento.year,pessoa_id)
+        ano_fechado = verificar_status_ano(data_lancamento.year, pessoa_id)
         
-        ativo  = verificar_data_saida(data_lancamento,pessoa_id)
+        ativo = verificar_data_saida(data_lancamento, pessoa_id)
         
-
         if form.is_valid():
             if  data_lancamento >= admissao and ativo:
                 
@@ -393,8 +392,8 @@ def pessoas_faltas(request, pessoa_id):
                             data_lancamento = dia_mes_ano[k][0] # pega o primeiro dia do lançamento e depois o primeiro dia do ano
 
                             # cria objeto com os novos dados
-                            novoObj = Faltas_Pessoas(pessoa=pessoa,data=data_lancamento,qtd_dias=qtd_dias,falta=falta)
-                            
+                            novoObj = Faltas_Pessoas(pessoa=pessoa, data=data_lancamento, qtd_dias=qtd_dias, falta=falta)
+                             
                             # salva o objeto
                             novoObj.save()
                 
@@ -435,6 +434,7 @@ def excluir_pessoas_faltas(request, pessoa_id, lancamento_id):
     
     return render(request,'template/lancar_falta.html', {'form':form, 'pessoa':pessoa, 'faltas':pessoa_falta})
         
+        
 # listar anos de uma determinada pessoa
 def listar_anos(pessoa_id):
     anos = []
@@ -446,6 +446,7 @@ def listar_anos(pessoa_id):
             anos.append(i.data.year)
 
     return anos[-5:], pessoa
+
 
 def listar_ficha(request, pessoa_id):
     anos, pessoa = listar_anos(pessoa_id)
@@ -1122,6 +1123,8 @@ def pdf_v3(request, pessoa_id, ano):
                             ('RIGHTPADDING',(0,0),(-1,-1),2),
                             ('ALIGN',(0,0),(-1,-1),'CENTER'),
                             ('FONTSIZE',(0,0), (-1,-1),tamanho_fonte), 
+                            ('SPAN',(-3,0),(-1,0)),
+                            ('SPAN',(1,2),(31,2))
                             # ('SPAN',(-3,-13),(-1,-12)),
                             # ('SPAN',(-3,-8),(-1,-8)),
                             # ('SPAN',(-3,-6),(-1,-6)),
@@ -1213,9 +1216,9 @@ def pdf_v3(request, pessoa_id, ano):
     elements.append(Paragraph(f"", styleB))
     
     elements.append(Paragraph('____________________________', styleAssTrac))
-    elements.append(Paragraph('Nome', styleAss))
-    elements.append(Paragraph('RG:11.111.111',styleAss))
-    elements.append(Paragraph('Diretora',styleAss))
+    elements.append(Paragraph('', styleAss))
+    elements.append(Paragraph('',styleAss))
+    elements.append(Paragraph('',styleAss))
     
     elements.append(t_tipos)
     doc.build(elements)
@@ -1455,8 +1458,12 @@ def coletivo(request):
 # Verificar 26/12/2022
 def lancar_evento_coletivo(request):
     pessoas = Pessoas.objects.all()
-   
+    cargos = Cargos.objects.all()
+    
     if request.method == 'POST':
+        #Captura os valores do formulário
+        cargos_selecionados = request.POST.getlist('cargos')
+
 
         # instância do formulário para pegar dados
         form = formularioLF(request.POST)
@@ -1474,8 +1481,11 @@ def lancar_evento_coletivo(request):
         # verifica se os dados preenchidos são válidos
         # verifica se existe faltas naquele intervalo
         for pessoa in pessoas:
-            conflito, ano_fechado = lancar_falta(data_lancamento, qtd_dias ,pessoa.id)
-            if data_lancamento > pessoa.admissao:
+            conflito= lancar_falta(data_lancamento, qtd_dias ,pessoa.id)
+            ano_fechado = verificar_status_ano(data_lancamento.year, pessoa.id)
+            
+         
+            if data_lancamento > pessoa.admissao and  str(pessoa.cargo.id) in cargos_selecionados:
                 
                 if conflito:
                     if not ano_fechado:
@@ -1500,7 +1510,7 @@ def lancar_evento_coletivo(request):
 
     form = formularioLF()
 
-    return render(request,'template/lancar_evento_coletivo.html', {'form':form})
+    return render(request,'template/lancar_evento_coletivo.html', {'form':form, 'cargos': cargos})
 
 
 @register.filter

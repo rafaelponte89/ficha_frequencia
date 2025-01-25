@@ -1,7 +1,7 @@
 {% extends 'template/menu.html' %}
 {% load crispy_forms_tags %}
 {% block content %}
-<form method="POST">
+<form method="POST" class="was-validated">
     {% csrf_token %}
     {{ form|crispy }}
 

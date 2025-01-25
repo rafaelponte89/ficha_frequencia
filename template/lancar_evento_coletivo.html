@@ -4,14 +4,30 @@
 {% bootstrap_css %}
 
 {% block content %}
-{% bootstrap_javascript jquery='full' %} 
+
 {{form.media}}
 <label>{{ nome }}</label>
-<form method="POST">
+<form method="POST" class="was-validated">
     {% csrf_token %}
     {{ form|crispy }}
+
+    <div id="selecao_cargos">
+        {% for cargo in cargos %}
+
+        <div class="custom-control custom-checkbox mb-3">
+            <input type="checkbox" 
+            name="cargos"
+            class="custom-control-input" value="{{cargo.id}}" id="customControlValidation{{cargo.id}}">
+            <label class="custom-control-label" for="customControlValidation{{cargo.id}}">{{cargo.cargo}}</label>
+        </div>
+
+
+
+        {% endfor %}
+
+    </div>
     <div clas="form-group">
-        <button class="btn btn-outline-dark">Gravar</button>
+        <button type="submit" class="btn btn-outline-dark">Gravar</button>
     </div>
 </form>
 
@@ -19,34 +35,40 @@
 
 
 <script>
-    let falta = document.getElementById("id_falta");
-    let texto = "";
-    falta.addEventListener("change", function () {
-        texto = falta.options[falta.selectedIndex].text;
-        if (texto === "NOJO"){
-            document.getElementById("id_qtd_dias").value = 8;
-            // document.getElementById("id_qtd_dias").disabled=true;
-        }
-        else if (texto === "PATERNIDADE") {
-            document.getElementById("id_qtd_dias").value = 5;
-            // document.getElementById("id_qtd_dias").disabled=true;
-        }
-        else if (texto === "LICENÇA PRÊMIO") {
-            document.getElementById("id_qtd_dias").value = 90;
-            // document.getElementById("id_qtd_dias").disabled=true;
-        }
-        else if (texto === "FÉRIAS") {
-            document.getElementById("id_qtd_dias").value = 30;
-            // document.getElementById("id_qtd_dias").disabled=true;
-        }
-        else {
-            document.getElementById("id_qtd_dias").value = 1;
-            // document.getElementById("id_qtd_dias").disabled=false;
+    $(document).ready(function () {
 
-        }
+        let falta = document.getElementById("id_falta");
+        let texto = "";
+        falta.addEventListener("change", function () {
+            texto = falta.options[falta.selectedIndex].text;
+            if (texto === "NOJO") {
+                document.getElementById("id_qtd_dias").value = 8;
+                // document.getElementById("id_qtd_dias").disabled=true;
+            }
+            else if (texto === "PATERNIDADE") {
+                document.getElementById("id_qtd_dias").value = 5;
+                // document.getElementById("id_qtd_dias").disabled=true;
+            }
+            else if (texto === "LICENÇA PRÊMIO") {
+                document.getElementById("id_qtd_dias").value = 90;
+                // document.getElementById("id_qtd_dias").disabled=true;
+            }
+            else if (texto === "FÉRIAS") {
+                document.getElementById("id_qtd_dias").value = 30;
+                // document.getElementById("id_qtd_dias").disabled=true;
+            }
+            else {
+                document.getElementById("id_qtd_dias").value = 1;
+                // document.getElementById("id_qtd_dias").disabled=false;
+
+            }
+        });
+
+        
+
+
     });
 
-  
 
 </script>
 {% endblock content %}

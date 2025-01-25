@@ -2,7 +2,6 @@
 {% load static %}
 
 
-
 {% block content %}
 
 <style>
@@ -15,6 +14,7 @@
            
         } */
     @media print {
+      
         html {
             margin: 0px;
             padding: 0px;
@@ -52,13 +52,17 @@
 
         .mt-5,
         .my-5 {
-            margin-top:  0px !important
+            margin-top: 0px !important
         }
 
 
         @page {
             size: landscape;
         }
+
+    
+       
+        
 
     }
 </style>
@@ -69,8 +73,8 @@
     <div class="nao-imprime">
         <div class="row">
             <div class="col">
-                <!-- <a class="btn btn-info mt-2 mb-2"
-                    href="{% url 'baixarpdf' contexto.pessoa.id contexto.ano %}">Baixar</a> -->
+                <a class="btn btn-info mt-2 mb-2"
+                    href="{% url 'baixarpdf' contexto.pessoa.id contexto.ano %}">Baixar</a>
                 <a class="btn btn-info mt-2 mb-2" href="#" id="imprimir">Imprimir</a>
             </div>
             <div class="col">
@@ -97,7 +101,7 @@
             <img src="{% static 'app_ficha_cem/brasao_orlandia.png' %}" width="50" />
         </div>
         <div class="col text-center">
-            NOME DA EMPRESA
+            <u>EMEB PROFESSORA VICTÓRIA OLIVITO NONINO</u>
         </div>
     </div>
 

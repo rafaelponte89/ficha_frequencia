@@ -1,0 +1,19 @@
+{% extends 'template/menu.html' %}
+{% load crispy_forms_tags %}
+{% load bootstrap4 %}
+{% bootstrap_css %}
+
+{% block content %}
+
+
+{{ form.media }}
+<form method="POST" class="was-validated">
+    {% csrf_token %}
+    {{ form|crispy }}
+    <div clas="form-group">
+        <button class="btn btn-outline-dark">Gravar</button>
+    </div>
+</form>
+
+
+{% endblock content %}

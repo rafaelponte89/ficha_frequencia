@@ -48,7 +48,8 @@ INSTALLED_APPS = [
     # 3rd
      'crispy_forms',
     'bootstrap_datepicker_plus',
-    'bootstrap4'
+    'bootstrap4',
+    'crispy_bootstrap4'
 ]
 
 MIDDLEWARE = [
@@ -138,7 +139,8 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CRIPSPY_TEMPLATE_PACK='bootstrap4'
+CRISPY_TEMPLATE_PACK='bootstrap4'
+
 
 BOOTSTRAP_DATEPICKER_PLUS = {
     "options": {

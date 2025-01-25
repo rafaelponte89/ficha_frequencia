@@ -4,10 +4,11 @@
 {% bootstrap_css %}
 
 {% block content %}
-{% bootstrap_javascript jquery='full' %}
+
+
+
 {{form.media}}
-<label>{{ nome }}</label>
-<form method="POST">
+<form method="POST" class="was-validated">
     {% csrf_token %}
     {{ form|crispy }}
     <div clas="form-group">

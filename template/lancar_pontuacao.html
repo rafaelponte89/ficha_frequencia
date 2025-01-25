@@ -14,7 +14,7 @@
     <div class="row">
         <div class="col-12">
             <h2>Pontuação Anual</h2>
-            <form method="POST">
+            <form method="POST" class="was-validated">
                 {% csrf_token %}
                 {{ form|crispy }}
                 <div clas="form-group">

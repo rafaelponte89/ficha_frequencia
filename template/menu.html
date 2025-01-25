@@ -1,4 +1,6 @@
 {% load static %}
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -7,6 +9,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css"
         integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css"
@@ -17,9 +21,9 @@
 </head>
 
 <body>
-    <span class="fa-solid fa-user"></span>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary  fixed-top">
-        <a class="navbar-brand" href="#">Navbar</a>
+    
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="#">SisPes</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
             aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -27,6 +31,11 @@
 
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link text-warning" href="#">{{pessoa.nome}} <span class="material-icons">
+                           </a>
+                </li>
+
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'listarcargos' %}">Cargos <span class="material-icons">
                             badge
@@ -37,25 +46,32 @@
                             book
                         </span></a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'listarpessoas' %}">Pessoas <span class="material-icons">
-                            person_add
-                        </span></a>
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Pessoas <span class="material-icons">
+                        person_add
+                    </span></a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                      <a class="dropdown-item" href="{% url 'cadastrarpessoas' %}">Cadastrar</a>
+                      <a class="dropdown-item" href="{% url 'telapesquisarpessoas' %}">Pesquisar</a>
+                    </div>
                 </li>
+
+              
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'coletivo' %}">Coletivo <span class="material-icons">
                             groups
                         </span></a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link text-warning" href="{% url 'listarpessoas' %}">{{pessoa.nome}} {{pessoa.id}}</a>
-                </li>
+              
 
                 {% for ano in contexto.anos %}
                 <li class="nav-item ">
                     <a class="nav-link" href="{% url 'ficha' contexto.pessoa.id ano %}">{{ano}}</a>
                 </li>
                 {% endfor %}
+
+             
 
 
     </nav>
@@ -70,13 +86,15 @@
         </button>
     </div>
 
-   
+
     {% endfor %}
     {% endif %}
 
 
 
     <div class="container mt-5">
+        <br>
+        
         {% block content %}
 
         {% endblock content %}
@@ -98,6 +116,10 @@
             $(".alert").fadeIn(500).delay(700).fadeOut(2000);
         });
     </script>
+
+    {% block script %}
+
+    {% endblock script %}
 
 
 
